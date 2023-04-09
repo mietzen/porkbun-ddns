@@ -5,7 +5,7 @@
 **All trademarks, logos and brand names are the property of their respective owners. All company, product and service names used in this package are for identification purposes only. Use of these names,trademarks and brands does not imply endorsement.**
 
 # Porkbun DDNS
-`porkbun-ddns` is an unoffical DDNS-Client for Porkbun Domains.
+`porkbun-ddns` is a unoffical DDNS-Client for Porkbun Domains.
 This library will only update the records if the IP(s) have changed or the dns entry didn't exist before, it will also set/update A (IPv4) and AAAA (IPv6) records.
 
 
@@ -25,8 +25,8 @@ pip install porkbun-ddns
 ## Usage
 
 ```Shell
-$ porkbun-ddns -h
-porkbun_ddns.py [-h] [-i [PUBLIC_IPS ...]] [-f FRITZBOX] config domain [subdomain]
+$ porkbun-ddns -h                                                           
+usage: porkbun-ddns [-h] [-i [PUBLIC_IPS ...]] [-f FRITZBOX] [-4 | -6] config domain [subdomain]
 
 positional arguments:
   config                Path to config file
@@ -39,16 +39,18 @@ options:
                         Public IPs (v4 and or v6)
   -f FRITZBOX, --fritzbox FRITZBOX
                         IP or Domain of your Fritz!Box
+  -4, --ipv4-only       Only set/update IPv4 A Records
+  -6, --ipv6-only       Only set/update IPv6 AAAA Records
 ```
 
 ```shell
-$ porkbun-ddns "<YOUR-PATH>/config.json" my.domain my.subdomain
+$ porkbun-ddns "./config.json" my.domain my.subdomain
 
 # Set IP's explicit
-$ porkbun-ddns "<YOUR-PATH>/config.json" my.domain my.subdomain -i '1.2.3.4' '1234:abcd:0:4567::8900'
+$ porkbun-ddns "./config.json" my.domain my.subdomain -i '1.2.3.4' '1234:abcd:0:4567::8900'
 
 # Use Fritz!Box to obtain IP's
-$ porkbun-ddns "<YOUR-PATH>/config.json" my.domain my.subdomain -f fritz.box
+$ porkbun-ddns "./config.json" my.domain my.subdomain -f fritz.box
 ```
 
 You can set up a cron job get the full path to porkbun-ddns with `which porkbun-ddns`, then execute `crontab -e` and add the following line:
@@ -86,16 +88,3 @@ porkbun_ddns = PorkbunDDNS('./config.json', 'my.domain', 'my.subdomain')
 porkbun_ddns_ip = PorkbunDDNS('./config.json', 'my.domain', 'my.subdomain', public_ips=['1.2.3.4','1234:abcd:0:4567::8900'])
 porkbun_ddns_fritz = PorkbunDDNS('./config.json', 'my.domain', 'my.subdomain', fritzbox='fritz.box')
 ```
-
-# Third party notices
-
-All modules used by this project are listed below:
-
-|                       Name                       |                                   License                                   |
-|:------------------------------------------------:|:---------------------------------------------------------------------------:|
-| [setuptools](https://github.com/pypa/setuptools) |    [MIT](https://raw.githubusercontent.com/pypa/setuptools/main/LICENSE)    |
-
-
-# License
-
-[MIT](https://github.com/infinityofspace/pkb_client/blob/master/License) - Copyright (c) Marvin Heptner

@@ -4,3 +4,7 @@ config.json
 .trunk
 __pycache__
 .DS_Store
+.venv
+build
+dist
+*.egg-info
