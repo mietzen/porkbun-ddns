@@ -66,8 +66,9 @@ You can set up a cron job get the full path to porkbun-ddns with `which porkbun-
 ```yaml
 version: "3"
 services:
-  web:
+  porkbun-ddns:
     image: "mietzen/porkbun-ddns:latest"
+    container_name: porkbun-ddns
     environment:
       DOMAIN: "domain.com" # Your Porkbun domain
       SUBDOMAINS: "my_subdomain,my_other_subdomain,my_subsubdomain.my_subdomain" # Subdomains comma spreaded
@@ -78,6 +79,7 @@ services:
       # SLEEP: "300" # Seconds to sleep between DynDNS runs
       # IPV4_ONLY: "FALSE" # Only set IPv4 address
       # IPV6_ONLY: "FALSE" # Only set IPv6 address
+    restart: unless-stopped
 ```
 
 # Python
