@@ -1,0 +1,14 @@
+version: "3"
+services:
+  web:
+    image: "mietzen/porkbun-ddns:latest"
+    environment:
+      DOMAIN: "domain.com" # Your Porkbun domain
+      SUBDOMAINS: "my_subdomain,my_other_subdomain,my_subsubdomain.my_subdomain" # Subdomains comma spreaded
+      SECRETAPIKEY: "<YOUR-SECRETAPIKEY>" # Your Porkbun Secret-API-Key
+      APIKEY: "<YOUR-APIKEY>" # Your Porkbun API-Key
+      # PUBLIC_IPS: "1.2.3.4,2001:043e::1" # Set if you got static IP's
+      # FRITZBOX: "192.168.178.1" # Use Fritz!BOX to obtain Public IP's
+      # SLEEP: "300" # Seconds to sleep between DynDNS runs
+      # IPV4_ONLY: "FALSE" # Only set IPv4 address
+      # IPV6_ONLY: "FALSE" # Only set IPv6 address
