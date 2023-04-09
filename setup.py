@@ -30,6 +30,6 @@ setup(
     keywords="porkbun ddns",
     packages=["porkbun_ddns"],
     entry_points={
-    'console_scripts': ['porkbun-ddns=porkbun_ddns.cli:main']
+        'console_scripts': ['porkbun-ddns=porkbun_ddns.cli:main']
     },
 )

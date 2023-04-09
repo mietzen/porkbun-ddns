@@ -1,6 +1,7 @@
 import argparse
 import sys
-from .porkbun_ddns import PorkbunDDNS
+import traceback
+from .porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
 
 
 def main():
@@ -29,7 +30,7 @@ def main():
                     help="Only set/update IPv6 AAAA Records")
 
     if len(sys.argv) == 1:
-            parser.print_help()
+        parser.print_help()
 
     args = parser.parse_args()
 
@@ -38,10 +39,20 @@ def main():
     if not any([ipv4, ipv6]):
         ipv4 = ipv6 = True
 
-    porkbun_ddns = PorkbunDDNS(config=args.config, domain=args.domain,
-                               subdomain=args.subdomain, public_ips=args.public_ips,
-                               fritzbox_ip=args.fritzbox, ipv4=ipv4, ipv6=ipv6)
-    porkbun_ddns.update_records()
+    try:
+        porkbun_ddns = PorkbunDDNS(config=args.config, domain=args.domain,
+                                   public_ips=args.public_ips, fritzbox_ip=args.fritzbox,
+                                   ipv4=ipv4, ipv6=ipv6)
+        porkbun_ddns.set_subdomain(args.subdomain)
+        porkbun_ddns.update_records()
+    except PorkbunDDNS_Error as e:
+        sys.stderr.write("Error: " + str(e))
+        sys.exit(1)
+    except Exception as e:
+        sys.stderr.write("This shouldn't have happened!")
+        sys.stderr.write("Error: " + str(e))
+        sys.stderr.write(traceback.format_exc())
+        sys.exit(1)
 
 
 if __name__ == "__main__":
