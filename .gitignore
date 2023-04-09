@@ -1,6 +1,6 @@
-
 config.json
 .vscode
 .ipynb_checkpoints
 .trunk
 __pycache__
+.DS_Store
