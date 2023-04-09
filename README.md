@@ -5,7 +5,7 @@
 **All trademarks, logos and brand names are the property of their respective owners. All company, product and service names used in this package are for identification purposes only. Use of these names,trademarks and brands does not imply endorsement.**
 
 # Porkbun DDNS
-`porkbun-ddns` is a unoffical DDNS-Client for Porkbun Domains.
+`porkbun-ddns` is a unofficial DDNS-Client for Porkbun Domains.
 This library will only update the records if the IP(s) have changed or the dns entry didn't exist before, it will also set/update A (IPv4) and AAAA (IPv6) records.
 
 
@@ -25,7 +25,7 @@ pip install porkbun-ddns
 ## Usage
 
 ```Shell
-$ porkbun-ddns -h                                                           
+$ porkbun-ddns -h
 usage: porkbun-ddns [-h] [-i [PUBLIC_IPS ...]] [-f FRITZBOX] [-4 | -6] config domain [subdomain]
 
 positional arguments:
