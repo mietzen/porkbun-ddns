@@ -102,7 +102,7 @@ jobs:
         echo ""
 
     - name: Push Images
-      if: github.event_name == 'push'
+      if: github.event_name == 'release' || github.ref_name == 'main'
       env:
         DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME }}
         BUILD_NR: ${{ github.run_number }}
