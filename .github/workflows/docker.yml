@@ -29,6 +29,8 @@ jobs:
           if [[ ${GITHUB_EVENT_NAME} != 'pull_request' ]]; then
             echo "This branch shouldn't be build: ${VERSION}"
             exit 1
+          else
+            VERSION='pull_request'
           fi
         fi
         echo "version=$(echo ${VERSION})" >> $GITHUB_OUTPUT
