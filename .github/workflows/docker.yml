@@ -20,13 +20,13 @@ jobs:
       id: set-matrix
       env:
         VERSION: ${{ github.ref_name }}
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
       run: | 
+        echo "Run triggered by: ${GITHUB_EVENT_NAME}"
         if grep -c -E '^v[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}$' <<< ${VERSION}; then 
           VERSION=$(sed 's/^.\{1\}//g' <<< ${VERSION})
         else
-          if [[ ${VERSION} == 'main' ]]; then
-            VERSION='latest'
-          else
+          if ! [[ ${GITHUB_EVENT_NAME} == 'pull_request' ]]; then
             echo "This branch shouldn't be build: ${VERSION}"
             exit 1
           fi
