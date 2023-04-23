@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.set-matrix.outputs.version }}
-      build_matrix: ${{ steps.set-matrix.outputs.build_matrix }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -34,7 +33,6 @@ jobs:
           fi
         fi
         echo "version=$(echo ${VERSION})" >> $GITHUB_OUTPUT
-        echo "build_matrix=$(cat .github/platforms.json)" >> $GITHUB_OUTPUT
 
   Build:
     runs-on: ubuntu-latest
@@ -42,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ${{ insert }}: ${{ fromJson(needs.Setup.outputs.build_matrix) }}
+        platforms: ["linux/amd64", "linux/arm64", "linux/386", "linux/arm/v7", "linux/arm/v6"]
     steps:
     - name: Checkout
       uses: actions/checkout@v3
