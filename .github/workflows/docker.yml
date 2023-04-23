@@ -69,6 +69,7 @@ jobs:
         PLATFORM: ${{ matrix.platforms }}
         VERSION: ${{ needs.Setup.outputs.version }}
       run: |
+        mv ./Docker/Dockerfile .
         ARCH=$(echo "${PLATFORM}" | awk -F  "/" '{print $2$3}')
         echo ""
         echo "============================================================="
@@ -79,7 +80,7 @@ jobs:
           --tag "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" \
           --platform ${PLATFORM} \
           --load \
-          -f ./Docker/Dockerfile .
+          -f ./Dockerfile .
 
     - name: Test
       env:
