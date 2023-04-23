@@ -1,7 +1,26 @@
 import os
 import sys
 from time import sleep
-from porkbun_ddns import PorkbunDDNS
+from porkbun_ddns import PorkbunDDNS, cli
+
+if os.getenv('INTEGRATION_TEST'):
+    print('\n------------------------------------')
+    print('INTEGRATION TEST! Printing help menu')
+    print('------------------------------------\n')
+    while True:
+        try:
+            cli.main(argv=['-h'])
+        except SystemExit:
+            pass
+        finally:
+            print('\n------------------------------------')
+            print('Sleeping...')
+            print('------------------------------------\n')
+            sleep(300)
+
+if not all([os.getenv('DOMAIN'), os.getenv('SECRETAPIKEY'), os.getenv('APIKEY')]):
+    print('Please set DOMAIN, SECRETAPIKEY and APIKEY')
+    sys.exit(1)
 
 domain = os.getenv('DOMAIN', None)
 public_ips = None

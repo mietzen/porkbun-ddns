@@ -4,7 +4,7 @@ import traceback
 from .porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
 
 
-def main():
+def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -32,7 +32,7 @@ def main():
     if len(sys.argv) == 1:
         parser.print_help()
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     ipv4 = args.ipv4_only
     ipv6 = args.ipv6_only
@@ -55,5 +55,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
