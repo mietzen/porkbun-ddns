@@ -68,7 +68,6 @@ jobs:
         BUILD_NR: ${{ github.run_number }}
         PLATFORM: ${{ matrix.platforms }}
         VERSION: ${{ needs.Setup.outputs.version }}
-      working-directory: ./Docker
       run: |
         ARCH=$(echo "${PLATFORM}" | awk -F  "/" '{print $2$3}')
         echo ""
@@ -80,7 +79,7 @@ jobs:
           --tag "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" \
           --platform ${PLATFORM} \
           --load \
-          -f Dockerfile .
+          -f ./Docker/Dockerfile .
 
     - name: Test
       env:
@@ -88,7 +87,6 @@ jobs:
         BUILD_NR: ${{ github.run_number }}
         PLATFORM: ${{ matrix.platforms }}
         VERSION: ${{ needs.Setup.outputs.version }}
-      working-directory: ./Docker
       run: |
         set -a
         ARCH=$(echo "${PLATFORM}" | awk -F  "/" '{print $2$3}')
@@ -97,7 +95,7 @@ jobs:
         echo "Testing: ${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}"
         echo "============================================================="
         echo ""
-        exec ./test/test.sh
+        exec ./Docker/test/test.sh
         echo ""
 
     - name: Push Images
