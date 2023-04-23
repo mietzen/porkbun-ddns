@@ -6,6 +6,7 @@ echo "Setup"
 docker run -d --rm \
     --name porkbun-ddns \
     --platform ${PLATFORM} \
+    --env "INTEGRATION_TEST=1" \
     "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}"
 
 # Install tools needed for inspect
