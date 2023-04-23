@@ -1,6 +1,6 @@
 import sys
 from setuptools import setup
-from os import path
+from os import path, environ
 
 setup_file_dir = path.abspath(path.dirname(__file__))
 
@@ -13,7 +13,7 @@ except FileNotFoundError:
 
 setup(
     name="porkbun-ddns",
-    version="0.0.1",
+    version=environ.get('VERSION'),
     description="A unofficial DDNS-Client for Porkbun domains",
     long_description=long_description,
     long_description_content_type='text/markdown',

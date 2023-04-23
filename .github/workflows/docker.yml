@@ -1,0 +1,175 @@
+name: Build & Upload Docker Image
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+
+jobs:
+  Setup:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set-matrix.outputs.version }}
+      build_matrix: ${{ steps.set-matrix.outputs.build_matrix }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Setup Matrix-Jobs
+      id: set-matrix
+      env:
+        VERSION: ${{ github.ref_name }}
+      run: | 
+        if grep -c -E '^v[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}$' <<< ${VERSION}; then 
+          VERSION=$(sed 's/^.\{1\}//g' <<< ${VERSION})
+        else
+          if [[ ${VERSION} == 'main' ]]; then
+            VERSION='latest'
+          else
+            echo "This branch shouldn't be build: ${VERSION}"
+            exit 1
+          fi
+        fi
+        echo "version=$(echo ${VERSION})" >> $GITHUB_OUTPUT
+        echo "build_matrix=$(cat .github/platforms.json)" >> $GITHUB_OUTPUT
+
+  Build:
+    runs-on: ubuntu-latest
+    needs: Setup
+    strategy:
+      fail-fast: false
+      matrix:
+        ${{ insert }}: ${{ fromJson(needs.Setup.outputs.build_matrix) }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_DEPLOY_KEY }}
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Install Perquisites
+      run: |
+        curl https://omnitruck.chef.io/install.sh | sudo bash -s -- -P inspec
+        inspec --chef-license=accept
+
+    - name: Build
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_HUB_USERNAME }}
+        BUILD_NR: ${{ github.run_number }}
+        PLATFORM: ${{ matrix.platforms }}
+        VERSION: ${{ needs.Setup.outputs.version }}
+      working-directory: ./Docker
+      run: |
+        ARCH=$(echo "${PLATFORM}" | awk -F  "/" '{print $2$3}')
+        echo ""
+        echo "============================================================="
+        echo "Building: ${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}"
+        echo "============================================================="
+        echo ""
+        docker buildx build \
+          --tag "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" \
+          --platform ${PLATFORM} \
+          --load \
+          -f Dockerfile .
+
+    - name: Test
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_HUB_USERNAME }}
+        BUILD_NR: ${{ github.run_number }}
+        PLATFORM: ${{ matrix.platforms }}
+        VERSION: ${{ needs.Setup.outputs.version }}
+      working-directory: ./Docker
+      run: |
+        set -a
+        ARCH=$(echo "${PLATFORM}" | awk -F  "/" '{print $2$3}')
+        echo ""
+        echo "============================================================="
+        echo "Testing: ${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}"
+        echo "============================================================="
+        echo ""
+        exec ./test/test.sh
+        echo ""
+
+    - name: Push Images
+      if: github.event_name == 'push'
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_HUB_USERNAME }}
+        BUILD_NR: ${{ github.run_number }}
+        PLATFORM: ${{ matrix.platforms }}
+        VERSION: ${{ needs.Setup.outputs.version }}
+      run: |
+        ARCH=$(echo "${PLATFORM}" | awk -F  "/" '{print $2$3}')
+        echo ""
+        echo "============================================================="
+        echo "Pushing: ${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}"
+        echo "============================================================="
+        echo ""
+        docker tag "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}"
+        docker push "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}"
+        docker push "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}"
+
+  Shared-Manifest:
+    if: github.event_name == 'release' || github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    needs: 
+      - Build
+      - Setup
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_DEPLOY_KEY }}
+
+    - name: Create and push shared manifest
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_HUB_USERNAME }}
+        BUILD_NR: ${{ github.run_number }}
+        VERSION: ${{ needs.Setup.outputs.version }}
+      run: |
+        echo ""
+        echo "============================================================="
+        echo "Pushing shared manifest: ${DOCKER_USER}/porkbun-ddns:${VERSION}"
+        echo "============================================================="
+        echo ""
+        echo "#!/bin/bash" > push-shared-tags.sh
+        echo -n "docker manifest create ${DOCKER_USER}/porkbun-ddns:${VERSION}" >> push-shared-tags.sh
+        while read -r PLATFORM; do
+          ARCH=$(echo "${PLATFORM}" | awk -F  "/" '{print $2$3}')
+          echo -n " ${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" >> push-shared-tags.sh
+        done <<< "$(cat .github/platforms.json | jq -r '.platforms | join("\n")')"
+        echo "" >> push-shared-tags.sh
+        echo "docker manifest push ${DOCKER_USER}/porkbun-ddns:${VERSION}" >> push-shared-tags.sh
+        cat push-shared-tags.sh
+        chmod +x ./push-shared-tags.sh
+        ./push-shared-tags.sh
+
+  Check-Build:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    needs: 
+      - Build
+      - Shared-Manifest
+    steps:
+      - run: |
+          result="${{ needs.Build.result }}"
+          if [[ $result == "success" || $result == "skipped" ]]; then
+            exit 0
+          else
+            exit 1
+          fi

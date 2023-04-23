@@ -1,0 +1,10 @@
+name: integration-test
+title: Integration Test
+maintainer: Nils Stein
+copyright: Nils Stein
+copyright_email: social.nstein@maiblox.org
+license: Apache-2.0
+summary: Integration test of the p910nd home-assistant addon
+version: 0.1.0
+supports:
+  - platform-name: debian
