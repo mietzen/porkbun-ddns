@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.set-matrix.outputs.version }}
+      build_matrix: ${{ steps.set-matrix.outputs.build_matrix }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -33,6 +34,7 @@ jobs:
           fi
         fi
         echo "version=$(echo ${VERSION})" >> $GITHUB_OUTPUT
+        echo "build_matrix=$(cat .github/platforms.json)" >> $GITHUB_OUTPUT
 
   Build:
     runs-on: ubuntu-latest
@@ -40,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platforms: ["linux/amd64", "linux/arm64", "linux/386", "linux/arm/v7", "linux/arm/v6"]
+        ${{ insert }}: ${{ fromJson(needs.Setup.outputs.build_matrix) }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -48,7 +50,7 @@ jobs:
     - name: Login to Docker Hub
       uses: docker/login-action@v2
       with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        username: ${{ vars.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_DEPLOY_KEY }}
 
     - name: Set up QEMU
@@ -64,7 +66,7 @@ jobs:
 
     - name: Build
       env:
-        DOCKER_USER: ${{ secrets.DOCKER_HUB_USERNAME }}
+        DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME }}
         BUILD_NR: ${{ github.run_number }}
         PLATFORM: ${{ matrix.platforms }}
         VERSION: ${{ needs.Setup.outputs.version }}
@@ -83,7 +85,7 @@ jobs:
 
     - name: Test
       env:
-        DOCKER_USER: ${{ secrets.DOCKER_HUB_USERNAME }}
+        DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME }}
         BUILD_NR: ${{ github.run_number }}
         PLATFORM: ${{ matrix.platforms }}
         VERSION: ${{ needs.Setup.outputs.version }}
@@ -102,7 +104,7 @@ jobs:
     - name: Push Images
       if: github.event_name == 'push'
       env:
-        DOCKER_USER: ${{ secrets.DOCKER_HUB_USERNAME }}
+        DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME }}
         BUILD_NR: ${{ github.run_number }}
         PLATFORM: ${{ matrix.platforms }}
         VERSION: ${{ needs.Setup.outputs.version }}
@@ -130,12 +132,12 @@ jobs:
     - name: Login to Docker Hub
       uses: docker/login-action@v2
       with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        username: ${{ vars.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_DEPLOY_KEY }}
 
     - name: Create and push shared manifest
       env:
-        DOCKER_USER: ${{ secrets.DOCKER_HUB_USERNAME }}
+        DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME }}
         BUILD_NR: ${{ github.run_number }}
         VERSION: ${{ needs.Setup.outputs.version }}
       run: |
