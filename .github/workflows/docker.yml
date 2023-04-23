@@ -116,6 +116,7 @@ jobs:
         echo "============================================================="
         echo ""
         docker tag "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}"
+        docker tag "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" "${DOCKER_USER}/porkbun-ddns:${ARCH}"
         docker push "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}"
         docker push "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}"
         docker push "${DOCKER_USER}/porkbun-ddns:${ARCH}"
