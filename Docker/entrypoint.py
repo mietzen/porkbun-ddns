@@ -27,7 +27,7 @@ public_ips = None
 if os.getenv('PUBLIC_IPS', None):
     public_ips = [x.strip() for x in os.getenv('PUBLIC_IPS', None).split(',')]
 fritzbox = os.getenv('FRITZBOX', None)
-sleep_time = os.getenv('SLEEP', 300)
+sleep_time = int(os.getenv('SLEEP', 300))
 
 config = {
     'secretapikey': os.getenv('SECRETAPIKEY'),
