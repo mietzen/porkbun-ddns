@@ -33,7 +33,7 @@ if os.getenv('INTEGRATION_TEST'):
             pass
         finally:
             print('\n------------------------------------')
-            print('Sleeping...')
+            print('Sleeping... {}s'.format(sleep_time))
             print('------------------------------------\n')
             sleep(sleep_time)
 
