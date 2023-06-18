@@ -28,10 +28,12 @@ class PorkbunDDNS():
         self._check_config()
         self.static_ips = public_ips
         self.domain = domain.lower()
-        self.records = self.get_records()
+        self.records = None
         self.fritzbox_ip = fritzbox_ip
         self.ipv4 = ipv4
         self.ipv6 = ipv6
+        self.fqdn = self.domain
+        self.subdomain = '@'
 
     def _load_config(self, config: str) -> None:
         """Load a JSON configuration file.
@@ -51,9 +53,7 @@ class PorkbunDDNS():
 
     def set_subdomain(self, subdomain: str) -> None:
         self.subdomain = subdomain.lower()
-        if self.subdomain == '@':
-            self.fqdn = self.domain
-        else:
+        if self.subdomain != '@':
             self.fqdn = '.'.join([self.subdomain, self.domain])
 
     def get_public_ips(self) -> list:
@@ -111,6 +111,7 @@ class PorkbunDDNS():
     def update_records(self):
         """Update DNS records for the specified domain.
         """
+        self.records = self.get_records()
         domain_names = [x['name'] for x in self.records if x['type']
                         in ["A", "AAAA", "ALIAS", "CNAME"]]
         for ip in self.get_public_ips():
