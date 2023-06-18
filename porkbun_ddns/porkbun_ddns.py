@@ -50,8 +50,11 @@ class PorkbunDDNS():
             self.config["endpoint"] = "https://porkbun.com/api/json/v3"
 
     def set_subdomain(self, subdomain: str) -> None:
-        self.subdomain = subdomain.lower()
-        self.fqdn = '.'.join([self.subdomain, self.domain])
+        if subdomain == '@':
+            self.fqdn = self.domain
+        else:
+            self.subdomain = subdomain.lower()
+            self.fqdn = '.'.join([self.subdomain, self.domain])
 
     def get_public_ips(self) -> list:
         """Retrieve the public IP addresses of the network.

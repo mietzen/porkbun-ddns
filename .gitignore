@@ -8,3 +8,5 @@ __pycache__
 build
 dist
 *.egg-info
+docker-compose.yml
+local_test.py
