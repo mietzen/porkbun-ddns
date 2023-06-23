@@ -156,6 +156,12 @@ jobs:
           echo -n " ${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" >> push-shared-tags.sh
         done <<< "$(cat .github/platforms.json | jq -r '.platforms | join("\n")')"
         echo "" >> push-shared-tags.sh
+        echo -n "docker manifest create ${DOCKER_USER}/porkbun-ddns:latest" >> push-shared-tags.sh
+        while read -r PLATFORM; do
+          ARCH=$(echo "${PLATFORM}" | awk -F  "/" '{print $2$3}')
+          echo -n " ${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" >> push-shared-tags.sh
+        done <<< "$(cat .github/platforms.json | jq -r '.platforms | join("\n")')"
+        echo "" >> push-shared-tags.sh
         echo "docker manifest push ${DOCKER_USER}/porkbun-ddns:${VERSION}" >> push-shared-tags.sh
         echo "docker manifest push ${DOCKER_USER}/porkbun-ddns:latest" >> push-shared-tags.sh
         cat push-shared-tags.sh
