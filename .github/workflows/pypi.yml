@@ -43,7 +43,7 @@ jobs:
     - name: Build package
       env:
         VERSION: ${{ needs.Setup.outputs.version }}
-      run: python -m build
+      run: python -m build --wheel
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@v1.8.5
       with:
