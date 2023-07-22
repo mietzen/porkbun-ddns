@@ -155,9 +155,9 @@ class PorkbunDDNS():
         """Create DNS records for the subdomain with the given IP address and type.
         """
 
-        obj = self.config.copy()
-        obj.update({"name": self.subdomain, "type": record_type,
+        data = self.config.copy()
+        data.update({"name": self.subdomain, "type": record_type,
                     "content": ip.exploded, "ttl": 600})
-        status = self._api("/dns/create/" + self.domain, obj)
+        status = self._api("/dns/create/" + self.domain, data)
         logger.info('Creating {}-Record for {} with content: {}, Status: {}'.format(record_type,
               self.fqdn, ip.exploded, status["status"]))
