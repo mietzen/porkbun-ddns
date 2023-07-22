@@ -1,9 +1,11 @@
 from __future__ import annotations
+import logging
 import json
 import ipaddress
 import urllib.request
 from .helpers import get_ips_from_fritzbox
 
+logger = logging.getLogger('porkbun_ddns')
 
 class PorkbunDDNS_Error(Exception):
     pass
@@ -133,7 +135,7 @@ class PorkbunDDNS():
                             self._create_records(ip, record_type)
                         # Everything is up to date
                         if i["type"] == record_type and i['content'] == ip.exploded:
-                            print('{}-Record of {} is up to date!'.format(
+                            logger.info('{}-Record of {} is up to date!'.format(
                                 i["type"], i["name"]))
             else:
                 # Create new record
@@ -146,7 +148,7 @@ class PorkbunDDNS():
         type, name, content = [(x['type'], x['name'], x['content'])
                                for x in self.records if x['id'] == domain_id][0]
         status = self._api("/dns/delete/" + self.domain + "/" + domain_id)
-        print('Deleting {}-Record for {} with content: {}, Status: {}'.format(type,
+        logger.info('Deleting {}-Record for {} with content: {}, Status: {}'.format(type,
               name, content, status["status"]))
 
     def _create_records(self, ip: ipaddress, record_type: str):
@@ -157,5 +159,5 @@ class PorkbunDDNS():
         obj.update({"name": self.subdomain, "type": record_type,
                     "content": ip.exploded, "ttl": 600})
         status = self._api("/dns/create/" + self.domain, obj)
-        print('Creating {}-Record for {} with content: {}, Status: {}'.format(record_type,
+        logger.info('Creating {}-Record for {} with content: {}, Status: {}'.format(record_type,
               self.fqdn, ip.exploded, status["status"]))
