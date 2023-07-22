@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import logging
 import json
 import ipaddress
@@ -139,7 +140,7 @@ class PorkbunDDNS():
                             self._delete_record(i['id'])
                             self._create_records(ip, record_type)
                         # Create missing A or AAAA entry
-                        if i["type"] != record_type and record_type not in [x['type'] for x in self.records if x['name'] == self.fqdn]:
+                        if i["type"] not in ["ALIAS", "CNAME", record_type] and record_type not in [x['type'] for x in self.records if x['name'] == self.fqdn]:
                             self._create_records(ip, record_type)
                         # Everything is up to date
                         if i["type"] == record_type and i['content'] == ip.exploded:
