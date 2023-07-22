@@ -27,7 +27,15 @@ class PorkbunDDNS():
         if isinstance(config, dict):
             self.config = config
         else:
-            self._load_config(config)
+            if isinstance(config, str):
+                try:
+                    self._load_config(config)
+                except FileNotFoundError as err:
+                    raise FileNotFoundError("Config path is invalid!\nPath:\n{}".format(config)) from err
+            else:
+                raise TypeError("Invalid config! Config should be a str (filepath) or dict!\nYour config:\n{}\nType: {}".format(
+                config, type(config)))
+
         self._check_config()
         self.static_ips = public_ips
         self.domain = domain.lower()
