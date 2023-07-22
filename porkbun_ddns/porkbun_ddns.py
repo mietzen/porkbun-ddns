@@ -57,8 +57,8 @@ class PorkbunDDNS():
         """
         required_keys = ["secretapikey", "apikey"]
         if all(x not in self.config for x in required_keys):
-            raise PorkbunDDNS_Error("all of the following are required in '{}': {}".format(
-                self.config, required_keys))
+            raise PorkbunDDNS_Error("Missing keys! All of the following are required: '{}'\nYour config:\n{}".format(
+                required_keys, self.config))
         if 'endpoint' not in self.config.keys():
             self.config["endpoint"] = "https://porkbun.com/api/json/v3"
 
