@@ -1,7 +1,12 @@
 import argparse
 import sys
 import traceback
+import logging
 from .porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.Formatter('%(message)s')
+logger = logging.getLogger('porkbun_ddns')
 
 
 def main(argv=sys.argv[1:]):
@@ -29,8 +34,12 @@ def main(argv=sys.argv[1:]):
     ip.add_argument('-6', '--ipv6-only', action='store_true',
                     help="Only set/update IPv6 AAAA Records")
 
-    if len(sys.argv) == 1:
+    if argv and len(argv) == 1:
         parser.print_help()
+        exit(1)
+    if not argv:
+        parser.print_help()
+        exit()
 
     args = parser.parse_args(argv)
 
@@ -46,13 +55,11 @@ def main(argv=sys.argv[1:]):
         porkbun_ddns.set_subdomain(args.subdomain)
         porkbun_ddns.update_records()
     except PorkbunDDNS_Error as e:
-        sys.stderr.write("Error: " + str(e))
-        sys.exit(1)
+        logger.error("Error: " + str(e))
     except Exception as e:
-        sys.stderr.write("This shouldn't have happened!")
-        sys.stderr.write("Error: " + str(e))
-        sys.stderr.write(traceback.format_exc())
-        sys.exit(1)
+        logger.error("This shouldn't have happened!")
+        logger.error("Error: " + str(e))
+        logger.error(traceback.format_exc())
 
 
 if __name__ == '__main__':
