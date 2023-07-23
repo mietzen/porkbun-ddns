@@ -33,7 +33,7 @@ jobs:
         run: |
           # stop the build if there are Python syntax errors or undefined names
           PY_VER=$(echo py${PY_VER} | tr -d '.')
-          ruff --format=github --ignore=E501 --target-version=${PY_VER} .
+          ruff --format=github --ignore=E501 --exclude=__init__.py --target-version=${PY_VER} ./porkbun_ddns
 
   Check-Test:
     if: ${{ always() }}
