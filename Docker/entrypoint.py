@@ -49,9 +49,9 @@ porkbun_ddns = PorkbunDDNS(config, domain, public_ips=public_ips,
                            fritzbox_ip=fritzbox, ipv4=ipv4, ipv6=ipv6)
 
 while True:
-    subdomains = os.getenv('SUBDOMAINS').replace(' ', '').split(',')
+    subdomains = os.getenv('SUBDOMAINS', '')
     if subdomains:
-        for subdomain in subdomains:
+        for subdomain in subdomains.replace(' ', '').split(','):
             porkbun_ddns.set_subdomain(subdomain)
             porkbun_ddns.update_records()
     else:
