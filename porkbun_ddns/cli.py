@@ -4,9 +4,14 @@ import traceback
 import logging
 from .porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-logging.Formatter('%(message)s')
+
 logger = logging.getLogger('porkbun_ddns')
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def main(argv=sys.argv[1:]):
@@ -52,7 +57,8 @@ def main(argv=sys.argv[1:]):
         porkbun_ddns = PorkbunDDNS(config=args.config, domain=args.domain,
                                    public_ips=args.public_ips, fritzbox_ip=args.fritzbox,
                                    ipv4=ipv4, ipv6=ipv6)
-        porkbun_ddns.set_subdomain(args.subdomain)
+        if args.subdomain:
+            porkbun_ddns.set_subdomain(args.subdomain)
         porkbun_ddns.update_records()
     except PorkbunDDNS_Error as e:
         logger.error("Error: " + str(e))
