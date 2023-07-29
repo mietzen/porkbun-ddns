@@ -41,6 +41,7 @@ options:
                         IP or Domain of your Fritz!Box
   -4, --ipv4-only       Only set/update IPv4 A Records
   -6, --ipv6-only       Only set/update IPv6 AAAA Records
+  -v, --verbose         Show Debug Output
 ```
 
 Examples:
