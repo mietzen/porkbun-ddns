@@ -11,3 +11,5 @@ dist
 docker-compose.yml
 local_test.py
 .env
+.ruff_cache
+.pytest_cache
