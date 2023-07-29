@@ -1,6 +1,11 @@
 import unittest
 from unittest.mock import patch
 from ..porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
+import logging
+
+logger = logging.getLogger('porkbun_ddns')
+logger.setLevel(logging.INFO)
+
 
 valid_config = {"endpoint": "https://porkbun.com/api/json/v3",
                 "apikey": "pk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
