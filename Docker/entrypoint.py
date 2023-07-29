@@ -6,11 +6,7 @@ from porkbun_ddns import PorkbunDDNS, cli
 
 logger = logging.getLogger('porkbun_ddns')
 logger.setLevel(logging.INFO)
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+logger.propagate = False
 
 sleep_time = int(os.getenv('SLEEP', 300))
 domain = os.getenv('DOMAIN', None)
@@ -37,26 +33,26 @@ if os.getenv('DEBUG', 'False').lower() in ('true', '1', 't'):
         handler.setLevel(logging.DEBUG)
 
 if os.getenv('INTEGRATION_TEST'):
-    print('\n------------------------------------')
-    print('INTEGRATION TEST! Printing help menu')
-    print('------------------------------------\n')
+    logger.info('\n------------------------------------')
+    logger.info('INTEGRATION TEST! logger.infoing help menu')
+    logger.info('------------------------------------\n')
     while True:
         try:
             cli.main(argv=['-h'])
         except SystemExit:
             pass
         finally:
-            print('\n------------------------------------')
-            print('Sleeping... {}s'.format(sleep_time))
-            print('------------------------------------\n')
+            logger.info('\n------------------------------------')
+            logger.info('Sleeping... {}s'.format(sleep_time))
+            logger.info('------------------------------------\n')
             sleep(sleep_time)
 
 if not all([os.getenv('DOMAIN'), os.getenv('SECRETAPIKEY'), os.getenv('APIKEY')]):
-    print('Please set DOMAIN, SECRETAPIKEY and APIKEY')
+    logger.info('Please set DOMAIN, SECRETAPIKEY and APIKEY')
     sys.exit(1)
 
 if not any([ipv4, ipv6]):
-    print('You can not set both IPV4_ONLY and IPV6_ONLY to TRUE')
+    logger.info('You can not set both IPV4_ONLY and IPV6_ONLY to TRUE')
     sys.exit(1)
 
 porkbun_ddns = PorkbunDDNS(config, domain, public_ips=public_ips,
@@ -70,5 +66,5 @@ while True:
             porkbun_ddns.update_records()
     else:
         porkbun_ddns.update_records()
-    print('Sleeping... {}s'.format(sleep_time))
+    logger.info('Sleeping... {}s'.format(sleep_time))
     sleep(sleep_time)
