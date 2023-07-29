@@ -30,7 +30,7 @@ jobs:
             echo "This branch shouldn't be build: ${VERSION}"
             exit 1
           else
-            VERSION=0.0.0'
+            VERSION='0.0.0'
           fi
         fi
         echo "version=$(echo ${VERSION})" >> $GITHUB_OUTPUT
