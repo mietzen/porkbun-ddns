@@ -2,13 +2,13 @@ import argparse
 import sys
 import traceback
 import logging
-from .porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
+from porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
 
 
 logger = logging.getLogger('porkbun_ddns')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.DEBUG)
+handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
@@ -39,6 +39,10 @@ def main(argv=sys.argv[1:]):
     ip.add_argument('-6', '--ipv6-only', action='store_true',
                     help="Only set/update IPv6 AAAA Records")
 
+    verbose = parser.add_mutually_exclusive_group()
+    verbose.add_argument('-v', '--verbose', action='store_true',
+                    help="Show Debug Output")
+
     if argv and len(argv) == 1:
         parser.print_help()
         exit(1)
@@ -52,6 +56,11 @@ def main(argv=sys.argv[1:]):
     ipv6 = args.ipv6_only
     if not any([ipv4, ipv6]):
         ipv4 = ipv6 = True
+
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+        for handler in logger.handlers:
+            handler.setLevel(logging.DEBUG)
 
     try:
         porkbun_ddns = PorkbunDDNS(config=args.config, domain=args.domain,
