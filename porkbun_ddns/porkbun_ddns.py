@@ -4,9 +4,10 @@ import logging
 import json
 import ipaddress
 import urllib.request
-from .helpers import get_ips_from_fritzbox
+from porkbun_ddns.helpers import get_ips_from_fritzbox
 
 logger = logging.getLogger('porkbun_ddns')
+
 
 class PorkbunDDNS_Error(Exception):
     pass
@@ -32,10 +33,11 @@ class PorkbunDDNS():
                 try:
                     self._load_config(config)
                 except FileNotFoundError as err:
-                    raise FileNotFoundError("Config path is invalid!\nPath:\n{}".format(config)) from err
+                    raise FileNotFoundError(
+                        "Config path is invalid!\nPath:\n{}".format(config)) from err
             else:
                 raise TypeError("Invalid config! Config should be a str (filepath) or dict!\nYour config:\n{}\nType: {}".format(
-                config, type(config)))
+                    config, type(config)))
 
         self._check_config()
         self.static_ips = public_ips
@@ -133,22 +135,34 @@ class PorkbunDDNS():
                     if i["name"] == self.fqdn:
                         # Overwrite ALIAS and CNAME
                         if i["type"] in ["ALIAS", "CNAME"]:
+                            logger.debug('Overwrite ALIAS and CNAME, with:\n{}'.format(json.dumps(
+                                {"name": self.fqdn, "type": record_type, "content": str(ip.exploded)})))
                             self._delete_record(i['id'])
                             self._create_records(ip, record_type)
                         # Update existing entry
                         if i["type"] == record_type and i['content'] != ip.exploded:
+                            logger.debug('Update existing entry, with:\n{}'.format(json.dumps(
+                                {"name": self.fqdn, "type": record_type, "content": str(ip.exploded)})))
                             self._delete_record(i['id'])
                             self._create_records(ip, record_type)
                         # Create missing A or AAAA entry
-                        if i["type"] not in ["ALIAS", "CNAME", record_type] and record_type not in [x['type'] for x in self.records if x['name'] == self.fqdn]:
+                        if i["type"] in ["A", "AAAA"] and record_type not in [x['type'] for x in self.records if x['name'] == self.fqdn]:
+                            logger.debug('Create missing A or AAAA entry, with:\n{}'.format(json.dumps(
+                                {"name": self.fqdn, "type": record_type, "content": str(ip.exploded)})))
                             self._create_records(ip, record_type)
+                            # Update records
+                            self.records = self.get_records()
                         # Everything is up to date
                         if i["type"] == record_type and i['content'] == ip.exploded:
                             logger.info('{}-Record of {} is up to date!'.format(
                                 i["type"], i["name"]))
             else:
+                logger.debug('Create new record, with:\n{}'.format(json.dumps(
+                    {"name": self.fqdn, "type": record_type, "content": str(ip.exploded)})))
                 # Create new record
                 self._create_records(ip, record_type)
+                # Update records
+                self.records = self.get_records()
 
     def _delete_record(self, domain_id: str):
         """Delete a DNS record with the given domain ID.
@@ -158,7 +172,7 @@ class PorkbunDDNS():
                                for x in self.records if x['id'] == domain_id][0]
         status = self._api("/dns/delete/" + self.domain + "/" + domain_id)
         logger.info('Deleting {}-Record for {} with content: {}, Status: {}'.format(type,
-              name, content, status["status"]))
+                                                                                    name, content, status["status"]))
 
     def _create_records(self, ip: ipaddress, record_type: str):
         """Create DNS records for the subdomain with the given IP address and type.
@@ -169,4 +183,4 @@ class PorkbunDDNS():
                     "content": ip.exploded, "ttl": 600})
         status = self._api("/dns/create/" + self.domain, data)
         logger.info('Creating {}-Record for {} with content: {}, Status: {}'.format(record_type,
-              self.fqdn, ip.exploded, status["status"]))
+                                                                                    self.fqdn, ip.exploded, status["status"]))
