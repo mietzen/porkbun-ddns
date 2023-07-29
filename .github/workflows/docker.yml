@@ -30,7 +30,7 @@ jobs:
             echo "This branch shouldn't be build: ${VERSION}"
             exit 1
           else
-            VERSION='pull_request'
+            VERSION='0.0.0'
           fi
         fi
         echo "version=$(echo ${VERSION})" >> $GITHUB_OUTPUT
@@ -74,6 +74,7 @@ jobs:
         docker buildx build \
           --tag "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" \
           --platform ${PLATFORM} \
+          --build-arg PORKBUN_DDNS_VERSION=${VERSION}
           --load \
           -f ./Docker/Dockerfile .
 
