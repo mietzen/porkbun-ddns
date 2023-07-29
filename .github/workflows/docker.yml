@@ -74,7 +74,7 @@ jobs:
         docker buildx build \
           --tag "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" \
           --platform ${PLATFORM} \
-          --build-arg PORKBUN_DDNS_VERSION=${VERSION}
+          --build-arg PORKBUN_DDNS_VERSION=${VERSION} \
           --load \
           -f ./Docker/Dockerfile .
 
