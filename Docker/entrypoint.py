@@ -1,7 +1,16 @@
 import os
 import sys
+import logging
 from time import sleep
 from porkbun_ddns import PorkbunDDNS, cli
+
+logger = logging.getLogger('porkbun_ddns')
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 sleep_time = int(os.getenv('SLEEP', 300))
 domain = os.getenv('DOMAIN', None)
@@ -21,6 +30,11 @@ if os.getenv('IPV4_ONLY', 'False').lower() in ('true', '1', 't'):
     ipv6 = False
 if os.getenv('IPV6_ONLY', 'False').lower() in ('true', '1', 't'):
     ipv4 = False
+
+if os.getenv('DEBUG', 'False').lower() in ('true', '1', 't'):
+    logger.setLevel(logging.DEBUG)
+    for handler in logger.handlers:
+        handler.setLevel(logging.DEBUG)
 
 if os.getenv('INTEGRATION_TEST'):
     print('\n------------------------------------')

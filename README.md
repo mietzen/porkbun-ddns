@@ -80,6 +80,7 @@ services:
       # SLEEP: "300" # Seconds to sleep between DynDNS runs
       # IPV4_ONLY: "FALSE" # Only set IPv4 address
       # IPV6_ONLY: "FALSE" # Only set IPv6 address
+      # DEBUG: "FALSE" # DEBUG LOGGING
       PYTHONUNBUFFERED: 1 # sent stdout and stderr straight to the terminal
     restart: unless-stopped
 ```
