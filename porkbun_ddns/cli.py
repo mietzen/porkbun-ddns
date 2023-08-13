@@ -1,5 +1,6 @@
 import argparse
 import sys
+import os
 import traceback
 import logging
 from porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
@@ -52,6 +53,21 @@ def main(argv=sys.argv[1:]):
 
     args = parser.parse_args(argv)
 
+    if args.config == "-":
+        try:
+            config = {
+                "apikey": os.environ["PORKBUN_APIKEY"],
+                "secretapikey": os.environ["PORKBUN_SECRETAPIKEY"],
+            }
+            endpoint = os.environ.get("PORKBUN_DDNS_ENDPOINT"),
+            if endpoint is not None:
+                config["endpoint"] = endpoint # type: ignore
+        except KeyError as e:
+            print("Invalid config environment variables.")
+            raise e
+    else:
+        config = args.config
+
     ipv4 = args.ipv4_only
     ipv6 = args.ipv6_only
     if not any([ipv4, ipv6]):
@@ -63,7 +79,7 @@ def main(argv=sys.argv[1:]):
             handler.setLevel(logging.DEBUG)
 
     try:
-        porkbun_ddns = PorkbunDDNS(config=args.config, domain=args.domain,
+        porkbun_ddns = PorkbunDDNS(config=config, domain=args.domain,
                                    public_ips=args.public_ips, fritzbox_ip=args.fritzbox,
                                    ipv4=ipv4, ipv6=ipv6)
         if args.subdomain:
