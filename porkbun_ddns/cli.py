@@ -22,9 +22,9 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("config", help="Path to config file")
     parser.add_argument("domain", help="Domain to be updated")
 
-    subdomain = parser.add_mutually_exclusive_group()
-    subdomain.add_argument('subdomain', nargs='?',
-                           default=None, help="Subdomain")
+    subdomains = parser.add_mutually_exclusive_group()
+    subdomains.add_argument('subdomains', nargs='*',
+                           default=None, help="Subdomain(s)")
 
     public_ips = parser.add_mutually_exclusive_group()
     public_ips.add_argument('-i', '--public-ips', nargs='*',
@@ -82,9 +82,12 @@ def main(argv=sys.argv[1:]):
         porkbun_ddns = PorkbunDDNS(config=config, domain=args.domain,
                                    public_ips=args.public_ips, fritzbox_ip=args.fritzbox,
                                    ipv4=ipv4, ipv6=ipv6)
-        if args.subdomain:
-            porkbun_ddns.set_subdomain(args.subdomain)
-        porkbun_ddns.update_records()
+        if args.subdomains:
+            for s in args.subdomains:
+                porkbun_ddns.set_subdomain(s)
+                porkbun_ddns.update_records()
+        else:
+            porkbun_ddns.update_records()
     except PorkbunDDNS_Error as e:
         logger.error("Error: " + str(e))
     except Exception as e:
