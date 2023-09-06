@@ -2,12 +2,14 @@
 
 set -xe
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 echo "Setup"
 docker run -d --rm \
     --name porkbun-ddns \
     --platform ${PLATFORM} \
-    --env "INTEGRATION_TEST=1" \
     --env "SLEEP=301" \
+    --volume ${SCRIPT_DIR}/assets/entrypoint.py:/entrypoint.py
     "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}"
 
 # Install tools needed for inspect

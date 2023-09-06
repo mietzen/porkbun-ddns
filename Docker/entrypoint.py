@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 from time import sleep
-from porkbun_ddns import PorkbunDDNS, cli
+from porkbun_ddns import PorkbunDDNS
 
 logger = logging.getLogger('porkbun_ddns')
 logger.setLevel(logging.INFO)
@@ -31,21 +31,6 @@ if os.getenv('DEBUG', 'False').lower() in ('true', '1', 't'):
     logger.setLevel(logging.DEBUG)
     for handler in logger.handlers:
         handler.setLevel(logging.DEBUG)
-
-if os.getenv('INTEGRATION_TEST'):
-    logger.info('\n------------------------------------')
-    logger.info('INTEGRATION TEST! logger.infoing help menu')
-    logger.info('------------------------------------\n')
-    while True:
-        try:
-            cli.main(argv=['-h'])
-        except SystemExit:
-            pass
-        finally:
-            logger.info('\n------------------------------------')
-            logger.info('Sleeping... {}s'.format(sleep_time))
-            logger.info('------------------------------------\n')
-            sleep(sleep_time)
 
 if not all([os.getenv('DOMAIN'), os.getenv('SECRETAPIKEY'), os.getenv('APIKEY')]):
     logger.info('Please set DOMAIN, SECRETAPIKEY and APIKEY')
