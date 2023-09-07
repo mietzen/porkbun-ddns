@@ -9,7 +9,8 @@ docker run -d --rm \
     --name porkbun-ddns \
     --platform ${PLATFORM} \
     --env "SLEEP=301" \
-    --volume ${SCRIPT_DIR}/assets/entrypoint.py:/entrypoint.py \
+    --volume ${SCRIPT_DIR}/assets/:/tmp/test-assets \
+    --entrypoint /tmp/test-assets/entrypoint.py \
     "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}"
 
 # Install tools needed for inspect
