@@ -30,6 +30,8 @@ jobs:
   Deploy:
     runs-on: ubuntu-latest
     needs: Setup
+    permissions:
+        id-token: write
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
@@ -45,6 +47,4 @@ jobs:
         VERSION: ${{ needs.Setup.outputs.version }}
       run: python -m build --wheel
     - name: Publish package
-      uses: pypa/gh-action-pypi-publish@v1.8.5
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
+      uses: pypa/gh-action-pypi-publish@release/v1
