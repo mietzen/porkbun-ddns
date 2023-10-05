@@ -1,6 +1,29 @@
 import urllib.request
 import xml.etree.ElementTree as ET
+import socket
+import logging
 
+logger = logging.getLogger()
+
+def check_ipv6_connectivity() -> bool:
+    """Check IPv6 connectivity
+    Source: Pandu Poluan, https://stackoverflow.com/a/66249915
+    
+    Returns:
+        bool: IPv6 connectivity
+    """
+    if socket.has_ipv6:
+        sock = None
+        try:
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            sock.bind(('v6.ident.me', 0))
+            return True
+        except OSError:
+            logger.warning('No IPv6 connectivity!')
+        finally:
+            if sock:
+                sock.close()
+    return False
 
 def get_ips_from_fritzbox(fritzbox_ip, ipv4=True):
     """Retrieves the IP address of the Fritzbox router's external network interface.

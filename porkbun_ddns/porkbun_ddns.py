@@ -5,6 +5,7 @@ import json
 import ipaddress
 import urllib.request
 from porkbun_ddns.helpers import get_ips_from_fritzbox
+from porkbun_ddns.helpers import check_ipv6_connectivity
 
 logger = logging.getLogger('porkbun_ddns')
 
@@ -81,16 +82,14 @@ class PorkbunDDNS():
                 if self.ipv4:
                     public_ips.append(
                         get_ips_from_fritzbox(self.fritzbox_ip, ipv4=True))
-                if self.ipv6:
-                    public_ips.append(get_ips_from_fritzbox(
-                        self.fritzbox_ip, ipv4=False))
             else:
                 if self.ipv4:
                     public_ips.append(urllib.request.urlopen(
                         'https://v4.ident.me').read().decode('utf8'))
                 if self.ipv6:
-                    public_ips.append(urllib.request.urlopen(
-                        'https://v6.ident.me').read().decode('utf8'))
+                    if check_ipv6_connectivity():
+                        public_ips.append(urllib.request.urlopen(
+                            'https://v6.ident.me').read().decode('utf8'))
             public_ips = set(public_ips)
 
         if not public_ips:
