@@ -96,8 +96,8 @@ class PorkbunDDNS():
         if not public_ips:
             raise PorkbunDDNS_Error('Failed to obtain IP Addresses!')
 
-        return [ipaddress.ip_address(x) for x in public_ips]
-
+        return [ipaddress.ip_address(x) for x in public_ips if not ipaddress.ip_address(x).is_unspecified]
+        
     def _api(self, target: str, data: dict = None) -> dict:
         """Send an API request to a specified target.
         """
