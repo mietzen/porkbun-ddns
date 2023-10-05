@@ -25,13 +25,11 @@ def check_ipv6_connectivity() -> bool:
                 sock.close()
     return False
 
-def get_ips_from_fritzbox(fritzbox_ip, ipv4=True):
+def get_ips_from_fritzbox(fritzbox_ip):
     """Retrieves the IP address of the Fritzbox router's external network interface.
 
     Args:
         fritzbox_ip (str): The IP address of the Fritzbox router.
-        ipv4 (bool, optional): A boolean flag that specifies whether to retrieve the IPv4 or IPv6 address.
-            Defaults to True, which retrieves the IPv4 address.
 
     Returns:
         str: The IP address of the Fritzbox router's external network interface.
@@ -43,12 +41,9 @@ def get_ips_from_fritzbox(fritzbox_ip, ipv4=True):
 
         AttributeError: If the requested field is not found in the XML response.
     """
-    if ipv4:
-        schema = 'GetExternalIPAddress'
-        field = 'NewExternalIPAddress'
-    else:
-        schema = 'X_AVM_DE_GetExternalIPv6Address'
-        field = 'NewExternalIPv6Address'
+
+    schema = 'GetExternalIPAddress'
+    field = 'NewExternalIPAddress'
 
     req = urllib.request.Request(
         'http://' + fritzbox_ip + ':49000/igdupnp/control/WANIPConn1')

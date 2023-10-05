@@ -81,7 +81,7 @@ class PorkbunDDNS():
             if self.fritzbox_ip:
                 if self.ipv4:
                     public_ips.append(
-                        get_ips_from_fritzbox(self.fritzbox_ip, ipv4=True))
+                        get_ips_from_fritzbox(self.fritzbox_ip))
             else:
                 if self.ipv4:
                     public_ips.append(urllib.request.urlopen(
