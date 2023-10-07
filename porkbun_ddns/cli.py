@@ -1,5 +1,6 @@
 import argparse
 import sys
+import os
 import traceback
 import logging
 from porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
@@ -21,9 +22,9 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("config", help="Path to config file")
     parser.add_argument("domain", help="Domain to be updated")
 
-    subdomain = parser.add_mutually_exclusive_group()
-    subdomain.add_argument('subdomain', nargs='?',
-                           default=None, help="Subdomain")
+    subdomains = parser.add_mutually_exclusive_group()
+    subdomains.add_argument('subdomains', nargs='*',
+                           default=None, help="Subdomain(s)")
 
     public_ips = parser.add_mutually_exclusive_group()
     public_ips.add_argument('-i', '--public-ips', nargs='*',
@@ -52,6 +53,18 @@ def main(argv=sys.argv[1:]):
 
     args = parser.parse_args(argv)
 
+    if args.config == "-":
+        try:
+            config = {
+                "apikey": os.environ["PORKBUN_APIKEY"],
+                "secretapikey": os.environ["PORKBUN_SECRETAPIKEY"],
+            }
+            config["endpoint"] =  os.environ.get("PORKBUN_DDNS_ENDPOINT", "https://porkbun.com/api/json/v3")
+        except KeyError:
+            logger.error("Invalid config environment variables.")
+    else:
+        config = args.config
+
     ipv4 = args.ipv4_only
     ipv6 = args.ipv6_only
     if not any([ipv4, ipv6]):
@@ -63,12 +76,15 @@ def main(argv=sys.argv[1:]):
             handler.setLevel(logging.DEBUG)
 
     try:
-        porkbun_ddns = PorkbunDDNS(config=args.config, domain=args.domain,
+        porkbun_ddns = PorkbunDDNS(config=config, domain=args.domain,
                                    public_ips=args.public_ips, fritzbox_ip=args.fritzbox,
                                    ipv4=ipv4, ipv6=ipv6)
-        if args.subdomain:
-            porkbun_ddns.set_subdomain(args.subdomain)
-        porkbun_ddns.update_records()
+        if args.subdomains:
+            for s in args.subdomains:
+                porkbun_ddns.set_subdomain(s)
+                porkbun_ddns.update_records()
+        else:
+            porkbun_ddns.update_records()
     except PorkbunDDNS_Error as e:
         logger.error("Error: " + str(e))
     except Exception as e:

@@ -49,6 +49,15 @@ Examples:
 ```shell
 $ porkbun-ddns "./config.json" domain.com my_subdomain
 
+# Multiple subdomains:
+$ porkbun-ddns "./config.json" domain.com my_subdomain_1 my_subdomain_2 my_subdomain_3
+
+# Get config from environment variable:
+# PORKBUN_APIKEY
+# PORKBUN_SECRETAPIKEY
+# PORKBUN_DDNS_ENDPOINT (Optional)
+$ porkbun-ddns - domain.com my_subdomain
+
 # Set IP's explicit
 $ porkbun-ddns "./config.json" domain.com my_subdomain -i '1.2.3.4' '1234:abcd:0:4567::8900'
 
