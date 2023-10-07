@@ -1,14 +1,35 @@
 import urllib.request
 import xml.etree.ElementTree as ET
+import socket
+import logging
 
+logger = logging.getLogger()
 
-def get_ips_from_fritzbox(fritzbox_ip, ipv4=True):
+def check_ipv6_connectivity() -> bool:
+    """Check IPv6 connectivity
+    Source: Pandu Poluan, https://stackoverflow.com/a/66249915
+    
+    Returns:
+        bool: IPv6 connectivity
+    """
+    if socket.has_ipv6:
+        sock = None
+        try:
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            sock.bind(('v6.ident.me', 0))
+            return True
+        except OSError:
+            logger.warning('No IPv6 connectivity!')
+        finally:
+            if sock:
+                sock.close()
+    return False
+
+def get_ips_from_fritzbox(fritzbox_ip):
     """Retrieves the IP address of the Fritzbox router's external network interface.
 
     Args:
         fritzbox_ip (str): The IP address of the Fritzbox router.
-        ipv4 (bool, optional): A boolean flag that specifies whether to retrieve the IPv4 or IPv6 address.
-            Defaults to True, which retrieves the IPv4 address.
 
     Returns:
         str: The IP address of the Fritzbox router's external network interface.
@@ -20,12 +41,9 @@ def get_ips_from_fritzbox(fritzbox_ip, ipv4=True):
 
         AttributeError: If the requested field is not found in the XML response.
     """
-    if ipv4:
-        schema = 'GetExternalIPAddress'
-        field = 'NewExternalIPAddress'
-    else:
-        schema = 'X_AVM_DE_GetExternalIPv6Address'
-        field = 'NewExternalIPv6Address'
+
+    schema = 'GetExternalIPAddress'
+    field = 'NewExternalIPAddress'
 
     req = urllib.request.Request(
         'http://' + fritzbox_ip + ':49000/igdupnp/control/WANIPConn1')

@@ -4,7 +4,9 @@ import logging
 import json
 import ipaddress
 import urllib.request
+from urllib.error import HTTPError
 from porkbun_ddns.helpers import get_ips_from_fritzbox
+from porkbun_ddns.helpers import check_ipv6_connectivity
 
 logger = logging.getLogger('porkbun_ddns')
 
@@ -80,24 +82,22 @@ class PorkbunDDNS():
             if self.fritzbox_ip:
                 if self.ipv4:
                     public_ips.append(
-                        get_ips_from_fritzbox(self.fritzbox_ip, ipv4=True))
-                if self.ipv6:
-                    public_ips.append(get_ips_from_fritzbox(
-                        self.fritzbox_ip, ipv4=False))
+                        get_ips_from_fritzbox(self.fritzbox_ip))
             else:
                 if self.ipv4:
                     public_ips.append(urllib.request.urlopen(
                         'https://v4.ident.me').read().decode('utf8'))
                 if self.ipv6:
-                    public_ips.append(urllib.request.urlopen(
-                        'https://v6.ident.me').read().decode('utf8'))
+                    if check_ipv6_connectivity():
+                        public_ips.append(urllib.request.urlopen(
+                            'https://v6.ident.me').read().decode('utf8'))
             public_ips = set(public_ips)
 
         if not public_ips:
             raise PorkbunDDNS_Error('Failed to obtain IP Addresses!')
 
-        return [ipaddress.ip_address(x) for x in public_ips]
-
+        return [ipaddress.ip_address(x) for x in public_ips if not ipaddress.ip_address(x).is_unspecified]
+        
     def _api(self, target: str, data: dict = None) -> dict:
         """Send an API request to a specified target.
         """
@@ -105,7 +105,13 @@ class PorkbunDDNS():
         data = data or self.config
         req = urllib.request.Request(self.config['endpoint'] + target)
         req.data = json.dumps(data).encode('utf8')
-        response = urllib.request.urlopen(req).read()
+        try:
+            response = urllib.request.urlopen(req).read()
+        except HTTPError as err:
+            if err.code == 400:
+                raise PorkbunDDNS_Error('Invalid API Keys!')
+            else:
+                raise err
         return json.loads(response.decode('utf-8'))
 
     def get_records(self) -> dict:
