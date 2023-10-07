@@ -60,7 +60,7 @@ def main(argv=sys.argv[1:]):
                 "secretapikey": os.environ["PORKBUN_SECRETAPIKEY"],
             }
             config["endpoint"] =  os.environ.get("PORKBUN_DDNS_ENDPOINT", "https://porkbun.com/api/json/v3")
-        except KeyError as e:
+        except KeyError:
             logger.error("Invalid config environment variables.")
     else:
         config = args.config
