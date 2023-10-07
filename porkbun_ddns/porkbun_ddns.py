@@ -4,6 +4,7 @@ import logging
 import json
 import ipaddress
 import urllib.request
+from urllib.error import HTTPError
 from porkbun_ddns.helpers import get_ips_from_fritzbox
 from porkbun_ddns.helpers import check_ipv6_connectivity
 
@@ -104,7 +105,13 @@ class PorkbunDDNS():
         data = data or self.config
         req = urllib.request.Request(self.config['endpoint'] + target)
         req.data = json.dumps(data).encode('utf8')
-        response = urllib.request.urlopen(req).read()
+        try:
+            response = urllib.request.urlopen(req).read()
+        except HTTPError as err:
+            if err.code == 400:
+                raise PorkbunDDNS_Error('Invalid API Keys!')
+            else:
+                raise err
         return json.loads(response.decode('utf-8'))
 
     def get_records(self) -> dict:
