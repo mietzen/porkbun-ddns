@@ -170,6 +170,22 @@ class PorkbunDDNS():
                 # Update records
                 self.records = self.get_records()
 
+    def delete_records(self):
+        """Update DNS records for the specified domain.
+        """
+        self.records = self.get_records()
+        domain_names = [x['name'] for x in self.records if x['type']
+                        in ["A", "AAAA"]]
+        if self.fqdn in domain_names:
+            for i in self.records:
+                if i["name"] == self.fqdn:
+                    logger.debug('Deleting existing entry:\n{}'.format(json.dumps(
+                        {"name": self.fqdn, "type": i['type'], "content": str(i['content'])})))
+                    self._delete_record(i['id'])
+        else:
+            logger.debug('Record not found:\n{}'.format(json.dumps(
+                {"name": self.fqdn, "type": i['type'], "content": str(i['content'])})))
+
     def _delete_record(self, domain_id: str):
         """Delete a DNS record with the given domain ID.
         """
