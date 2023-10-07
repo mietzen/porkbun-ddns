@@ -184,7 +184,7 @@ class PorkbunDDNS():
                     self._delete_record(i['id'])
         else:
             logger.debug('Record not found:\n{}'.format(json.dumps(
-                {"name": self.fqdn, "type": record_type, "content": str(ip.exploded)})))
+                {"name": self.fqdn, "type": i['type'], "content": str(i['content'])})))
 
     def _delete_record(self, domain_id: str):
         """Delete a DNS record with the given domain ID.
