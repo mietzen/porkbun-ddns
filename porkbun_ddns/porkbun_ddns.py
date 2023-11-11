@@ -169,7 +169,7 @@ class PorkbunDDNS():
                 self.records = self.get_records()
 
     def delete_records(self):
-        """Update DNS records for the specified domain.
+        """Delete A and AAAA DNS record for set record.
         """
         self.records = self.get_records()
         domain_names = [x['name'] for x in self.records if x['type']
