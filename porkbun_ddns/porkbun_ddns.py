@@ -6,7 +6,6 @@ import ipaddress
 import urllib.request
 from urllib.error import HTTPError
 from porkbun_ddns.helpers import get_ips_from_fritzbox
-from porkbun_ddns.helpers import check_ipv6_connectivity
 
 logger = logging.getLogger('porkbun_ddns')
 
@@ -88,9 +87,8 @@ class PorkbunDDNS():
                     public_ips.append(urllib.request.urlopen(
                         'https://v4.ident.me').read().decode('utf8'))
                 if self.ipv6:
-                    if check_ipv6_connectivity():
-                        public_ips.append(urllib.request.urlopen(
-                            'https://v6.ident.me').read().decode('utf8'))
+                    public_ips.append(urllib.request.urlopen(
+                        'https://v6.ident.me').read().decode('utf8'))
             public_ips = set(public_ips)
 
         if not public_ips:
@@ -171,7 +169,7 @@ class PorkbunDDNS():
                 self.records = self.get_records()
 
     def delete_records(self):
-        """Update DNS records for the specified domain.
+        """Delete A and AAAA DNS record for set record.
         """
         self.records = self.get_records()
         domain_names = [x['name'] for x in self.records if x['type']
