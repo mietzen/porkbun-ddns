@@ -1,6 +1,5 @@
 import urllib.request
 import xml.etree.ElementTree as ET
-import socket
 import logging
 
 logger = logging.getLogger()
