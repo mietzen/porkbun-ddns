@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
       fail-fast: false
 
     steps:
@@ -33,7 +33,7 @@ jobs:
         run: |
           # stop the build if there are Python syntax errors or undefined names
           PY_VER=$(echo py${PY_VER} | tr -d '.')
-          ruff --format=github --ignore=E501 --exclude=__init__.py --target-version=${PY_VER} ./porkbun_ddns
+          ruff --output-format=github --ignore=E501 --exclude=__init__.py --target-version=${PY_VER} ./porkbun_ddns
 
   Check-Test:
     if: ${{ always() }}
