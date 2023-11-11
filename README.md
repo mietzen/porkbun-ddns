@@ -71,6 +71,15 @@ You can set up a cron job get the full path to porkbun-ddns with `which porkbun-
 */30 * * * * <PORKBUN-DDNS-PATH>/porkbun-ddns "<YOUR-PATH>/config.json" domain.com my.subdomain >/dev/null 2>&1
 ```
 
+`config.json` example:
+
+```
+{ "endpoint":"https://porkbun.com/api/json/v3",
+  "apikey": "pk1_xxx",
+  "secretapikey": "sk1_xxx"
+}
+```
+
 # Docker-Compose
 
 ```yaml
