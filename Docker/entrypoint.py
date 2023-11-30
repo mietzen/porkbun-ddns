@@ -28,18 +28,28 @@ config = {
     'apikey': os.getenv('APIKEY')
 }
 
-ipv4 = ipv6 = True
+ipv4 = ipv6 = False
+if os.getenv('IPV4', 'True').lower() in ('true', '1', 't'):
+    ipv4 = True
+if os.getenv('IPV6', 'False').lower() in ('true', '1', 't'):
+    ipv6 = True
+
+# DEPRECATED!
 if os.getenv('IPV4_ONLY', 'False').lower() in ('true', '1', 't'):
+    ipv4 = True
     ipv6 = False
+    logger.info('IPV4_ONLY is DEPRECATED! And will be removed!')
 if os.getenv('IPV6_ONLY', 'False').lower() in ('true', '1', 't'):
     ipv4 = False
-
+    ipv6 = True
+    logger.info('IPV6_ONLY is DEPRECATED! And will be removed!')
+    
 if not all([os.getenv('DOMAIN'), os.getenv('SECRETAPIKEY'), os.getenv('APIKEY')]):
     logger.info('Please set DOMAIN, SECRETAPIKEY and APIKEY')
     sys.exit(1)
 
 if not any([ipv4, ipv6]):
-    logger.info('You can not set both IPV4_ONLY and IPV6_ONLY to TRUE')
+    logger.info('No Protocol selected! Please set IPV4 and/or IPV6 TRUE')
     sys.exit(1)
 
 porkbun_ddns = PorkbunDDNS(config, domain, public_ips=public_ips,

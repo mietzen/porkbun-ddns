@@ -4,7 +4,7 @@ import logging
 import json
 import ipaddress
 import urllib.request
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from porkbun_ddns.helpers import get_ips_from_fritzbox
 
 logger = logging.getLogger('porkbun_ddns')
@@ -84,11 +84,18 @@ class PorkbunDDNS():
                         get_ips_from_fritzbox(self.fritzbox_ip))
             else:
                 if self.ipv4:
-                    public_ips.append(urllib.request.urlopen(
-                        'https://v4.ident.me').read().decode('utf8'))
+                    try:
+                        public_ips.append(urllib.request.urlopen(
+                            'https://v4.ident.me').read().decode('utf8'))
+                    except URLError:
+                        logger.warning("Can't reach IPv4 Address! Check IPv4 connectivity!")
                 if self.ipv6:
-                    public_ips.append(urllib.request.urlopen(
-                        'https://v6.ident.me').read().decode('utf8'))
+                    try:
+                        public_ips.append(urllib.request.urlopen(
+                            'https://v6.ident.me').read().decode('utf8'))
+                    except URLError:
+                        logger.warning("Can't reach IPv6 Address! Check IPv6 connectivity!")
+                        
             public_ips = set(public_ips)
 
         if not public_ips:

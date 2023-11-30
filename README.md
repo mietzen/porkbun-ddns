@@ -96,8 +96,10 @@ services:
       # PUBLIC_IPS: "1.2.3.4,2001:043e::1" # Set if you got static IP's
       # FRITZBOX: "192.168.178.1" # Use Fritz!BOX to obtain Public IP's
       # SLEEP: "300" # Seconds to sleep between DynDNS runs
-      # IPV4_ONLY: "FALSE" # Only set IPv4 address
-      # IPV6_ONLY: "FALSE" # Only set IPv6 address
+      # IPV4: "TRUE" # Set IPv4 address
+      # IPV6: "FALSE" # Set IPv6 address
+      # IPV4_ONLY: "FALSE" # Only set IPv4 address [DEPRECATED]
+      # IPV6_ONLY: "FALSE" # Only set IPv6 address [DEPRECATED]
       # DEBUG: "FALSE" # DEBUG LOGGING
     restart: unless-stopped
 ```
