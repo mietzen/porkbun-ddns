@@ -5,8 +5,15 @@ from time import sleep
 from porkbun_ddns import PorkbunDDNS
 
 logger = logging.getLogger('porkbun_ddns')
-logger.setLevel(logging.INFO)
+if os.getenv('DEBUG', 'False').lower() in ('true', '1', 't'):
+    logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.INFO)
 logger.propagate = False
+logFormatter = logging.Formatter("%(asctime)s %(levelname)-8s %(message)s")
+consoleHandler = logging.StreamHandler(sys.stdout)
+consoleHandler.setFormatter(logFormatter)
+logger.addHandler(consoleHandler)
 
 sleep_time = int(os.getenv('SLEEP', 300))
 domain = os.getenv('DOMAIN', None)
@@ -26,11 +33,6 @@ if os.getenv('IPV4_ONLY', 'False').lower() in ('true', '1', 't'):
     ipv6 = False
 if os.getenv('IPV6_ONLY', 'False').lower() in ('true', '1', 't'):
     ipv4 = False
-
-if os.getenv('DEBUG', 'False').lower() in ('true', '1', 't'):
-    logger.setLevel(logging.DEBUG)
-    for handler in logger.handlers:
-        handler.setLevel(logging.DEBUG)
 
 if not all([os.getenv('DOMAIN'), os.getenv('SECRETAPIKEY'), os.getenv('APIKEY')]):
     logger.info('Please set DOMAIN, SECRETAPIKEY and APIKEY')
