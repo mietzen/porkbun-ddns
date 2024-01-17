@@ -106,7 +106,7 @@ You have to use `docker run` if you want to use IPv6, see https://github.com/mie
 # Docker run
 
 ```shell
-docker run \
+docker run -d \
   -e DOMAIN="domain.com" \
   -e SUBDOMAINS="my_subdomain,my_other_subdomain,my_subsubdomain.my_subdomain" \
   -e SECRETAPIKEY="<YOUR-SECRETAPIKEY>" \
