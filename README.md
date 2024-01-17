@@ -80,7 +80,7 @@ You can set up a cron job get the full path to porkbun-ddns with `which porkbun-
 }
 ```
 
-# Docker-Compose
+# Docker compose
 
 ```yaml
 version: "3"
@@ -97,11 +97,25 @@ services:
       # FRITZBOX: "192.168.178.1" # Use Fritz!BOX to obtain Public IP's
       # SLEEP: "300" # Seconds to sleep between DynDNS runs
       # IPV4: "TRUE" # Set IPv4 address
-      # IPV6: "FALSE" # Set IPv6 address
-      # IPV4_ONLY: "FALSE" # Only set IPv4 address [DEPRECATED]
-      # IPV6_ONLY: "FALSE" # Only set IPv6 address [DEPRECATED]
       # DEBUG: "FALSE" # DEBUG LOGGING
     restart: unless-stopped
+```
+
+You have to use `docker run` if you want to use IPv6, see https://github.com/mietzen/porkbun-ddns/issues/34
+
+# Docker run
+
+```shell
+docker run \
+  -e DOMAIN="domain.com" \
+  -e SUBDOMAINS="my_subdomain,my_other_subdomain,my_subsubdomain.my_subdomain" \
+  -e SECRETAPIKEY="<YOUR-SECRETAPIKEY>" \
+  -e APIKEY="<YOUR-APIKEY>" \
+  -e IPV4="TRUE" \
+  -e IPV6="TRUE" \
+  --name porkbun-ddns \
+  --restart unless-stopped \
+  mietzen/porkbun-ddns:latest
 ```
 
 # Python
