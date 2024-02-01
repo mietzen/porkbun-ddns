@@ -5,6 +5,7 @@
 **All trademarks, logos and brand names are the property of their respective owners. All company, product and service names used in this package are for identification purposes only. Use of these names,trademarks and brands does not imply endorsement.**
 
 # Porkbun DDNS
+
 `porkbun-ddns` is a unofficial DDNS-Client for Porkbun Domains.
 This library will only update the records if the IP(s) have changed or the dns entry didn't exist before, it will also set/update A (IPv4) and AAAA (IPv6) records.
 
@@ -13,6 +14,12 @@ Since [porkbun-dynamic-dns-python](https://github.com/porkbundomains/porkbun-dyn
 Inspired by [con-f-use](https://github.com/con-f-use) [pull request](https://github.com/porkbundomains/porkbun-dynamic-dns-python/pull/6), I built a pip Package and a docker container.
 
 As alternative to cert-bun use my [lego-certbot](https://github.com/mietzen/lego-certbot) image.
+
+## Setup on Porkbun
+
+Make sure that any domain you use this client with has API access enabled. See the below picture for reference.
+
+![API Access Enabled](API_Access_Enabled.png)
 
 # CLI
 
