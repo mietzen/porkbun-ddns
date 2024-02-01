@@ -17,9 +17,11 @@ As alternative to cert-bun use my [lego-certbot](https://github.com/mietzen/lego
 
 ## Setup on Porkbun
 
-Make sure that any domain you use this client with has API access enabled. See the below picture for reference. If this is not enabled, you'll see an error about your API keys being invalid, despite them being correct.
+Make sure that any domain you use this client with has API access enabled. See the below picture for reference.
 
 ![API Access Enabled](API_Access_Enabled.png)
+
+If this is not enabled, you'll see an error about your API keys being invalid, despite them being correct.
 
 # CLI
 
