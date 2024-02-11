@@ -5,6 +5,7 @@
 **All trademarks, logos and brand names are the property of their respective owners. All company, product and service names used in this package are for identification purposes only. Use of these names,trademarks and brands does not imply endorsement.**
 
 # Porkbun DDNS
+
 `porkbun-ddns` is a unofficial DDNS-Client for Porkbun Domains.
 This library will only update the records if the IP(s) have changed or the dns entry didn't exist before, it will also set/update A (IPv4) and AAAA (IPv6) records.
 
@@ -13,6 +14,14 @@ Since [porkbun-dynamic-dns-python](https://github.com/porkbundomains/porkbun-dyn
 Inspired by [con-f-use](https://github.com/con-f-use) [pull request](https://github.com/porkbundomains/porkbun-dynamic-dns-python/pull/6), I built a pip Package and a docker container.
 
 As alternative to cert-bun use my [lego-certbot](https://github.com/mietzen/lego-certbot) image.
+
+## Setup on Porkbun
+
+Make sure that any domain you use this client with has API access enabled. See the below picture for reference.
+
+![API Access Enabled](API_Access_Enabled.png)
+
+If this is not enabled, you'll see an error about your API keys being invalid, despite them being correct.
 
 # CLI
 
@@ -80,7 +89,7 @@ You can set up a cron job get the full path to porkbun-ddns with `which porkbun-
 }
 ```
 
-# Docker-Compose
+# Docker compose
 
 ```yaml
 version: "3"
@@ -97,11 +106,25 @@ services:
       # FRITZBOX: "192.168.178.1" # Use Fritz!BOX to obtain Public IP's
       # SLEEP: "300" # Seconds to sleep between DynDNS runs
       # IPV4: "TRUE" # Set IPv4 address
-      # IPV6: "FALSE" # Set IPv6 address
-      # IPV4_ONLY: "FALSE" # Only set IPv4 address [DEPRECATED]
-      # IPV6_ONLY: "FALSE" # Only set IPv6 address [DEPRECATED]
       # DEBUG: "FALSE" # DEBUG LOGGING
     restart: unless-stopped
+```
+
+You have to use `docker run` if you want to use IPv6, see https://github.com/mietzen/porkbun-ddns/issues/34
+
+# Docker run
+
+```shell
+docker run -d \
+  -e DOMAIN="domain.com" \
+  -e SUBDOMAINS="my_subdomain,my_other_subdomain,my_subsubdomain.my_subdomain" \
+  -e SECRETAPIKEY="<YOUR-SECRETAPIKEY>" \
+  -e APIKEY="<YOUR-APIKEY>" \
+  -e IPV4="TRUE" \
+  -e IPV6="TRUE" \
+  --name porkbun-ddns \
+  --restart unless-stopped \
+  mietzen/porkbun-ddns:latest
 ```
 
 # Python
