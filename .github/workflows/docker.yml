@@ -55,8 +55,7 @@ jobs:
 
     - name: Install Perquisites
       run: |
-        curl https://omnitruck.chef.io/install.sh | sudo bash -s -- -P inspec -v 5.22.36
-        inspec --chef-license=accept
+        curl -L https://omnitruck.cinc.sh/install.sh | sudo bash -s -- -P cinc-auditor -v 5
 
     - name: Build
       env:
