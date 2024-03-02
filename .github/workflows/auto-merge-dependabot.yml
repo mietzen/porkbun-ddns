@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
     steps:
-      - uses: tibdex/github-app-token@v2
+      - uses: actions/create-github-app-token@v1
         id: generate-token
         with:
           app_id: ${{ secrets.APP_ID }}
