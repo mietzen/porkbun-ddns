@@ -13,7 +13,7 @@ jobs:
       build_matrix: ${{ steps.set-matrix.outputs.build_matrix }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Setup Matrix-Jobs
@@ -45,13 +45,13 @@ jobs:
         ${{ insert }}: ${{ fromJson(needs.Setup.outputs.build_matrix) }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
 
     - name: Install Perquisites
       run: |
@@ -97,7 +97,7 @@ jobs:
 
     - name: Login to Docker Hub
       if: github.event_name == 'release'
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         username: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         password: ${{ secrets.DOCKER_HUB_DEPLOY_KEY }}
@@ -130,10 +130,10 @@ jobs:
       - Setup
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Login to Docker Hub
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         username: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         password: ${{ secrets.DOCKER_HUB_DEPLOY_KEY }}
