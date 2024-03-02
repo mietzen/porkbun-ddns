@@ -173,8 +173,8 @@ class TestPorkbunDDNS(unittest.TestCase):
         with self.assertRaises(PorkbunDDNS_Error) as context:
             porkbun_ddns.get_public_ips()
 
-        # Verify that the exception has the expected status code
-        self.assertEqual(context.exception, PorkbunDDNS_Error('Failed to obtain IP Addresses!'))
+        # Verify that the exception has the expected error message
+        self.assertEqual(str(context.exception), 'Failed to obtain IP Addresses!')
 
 
 if __name__ == '__main__':
