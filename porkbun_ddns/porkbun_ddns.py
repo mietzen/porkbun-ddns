@@ -85,8 +85,16 @@ class PorkbunDDNS():
             else:
                 if self.ipv4:
                     try:
-                        public_ips.append(urllib.request.urlopen(
-                            'https://v4.ident.me').read().decode('utf8'))
+                        response = urllib.request.urlopen('https://v4.ident.me')
+                        if response.getcode() == 200:
+                            public_ips.append(response.read().decode('utf-8'))
+                        else:
+                            logger.warning("Failed to retrieve IPv4 Address! HTTP status code: {}".format(response.code()))
+                            alternative_response = urllib.request.urlopen('https://api.ipify.org/')
+                            if alternative_response.getcode() == 200:
+                                public_ips.append(alternative_response.read().decode('utf-8'))
+                            else:
+                                logger.warning("Failed to retrieve IPv4 Address! HTTP status code: {}".format(response.code()))
                     except URLError:
                         logger.warning("Can't reach IPv4 Address! Check IPv4 connectivity!")
                 if self.ipv6:

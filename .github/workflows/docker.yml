@@ -59,7 +59,7 @@ jobs:
 
     - name: Build
       env:
-        DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME || 'USER' }}
+        DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         BUILD_NR: ${{ github.run_number }}
         PLATFORM: ${{ matrix.platforms }}
         VERSION: ${{ needs.Setup.outputs.version }}
@@ -79,7 +79,7 @@ jobs:
 
     - name: Test
       env:
-        DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME || 'USER' }}
+        DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         BUILD_NR: ${{ github.run_number }}
         PLATFORM: ${{ matrix.platforms }}
         VERSION: ${{ needs.Setup.outputs.version }}
@@ -99,13 +99,13 @@ jobs:
       if: github.event_name == 'release'
       uses: docker/login-action@v2
       with:
-        username: ${{ vars.DOCKER_HUB_USERNAME || 'USER' }}
+        username: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         password: ${{ secrets.DOCKER_HUB_DEPLOY_KEY }}
 
     - name: Push Images
       if: github.event_name == 'release'
       env:
-        DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME || 'USER' }}
+        DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         BUILD_NR: ${{ github.run_number }}
         PLATFORM: ${{ matrix.platforms }}
         VERSION: ${{ needs.Setup.outputs.version }}
@@ -135,12 +135,12 @@ jobs:
     - name: Login to Docker Hub
       uses: docker/login-action@v2
       with:
-        username: ${{ vars.DOCKER_HUB_USERNAME || 'USER' }}
+        username: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         password: ${{ secrets.DOCKER_HUB_DEPLOY_KEY }}
 
     - name: Create and push shared manifest
       env:
-        DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME || 'USER' }}
+        DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         BUILD_NR: ${{ github.run_number }}
         VERSION: ${{ needs.Setup.outputs.version }}
       run: |
