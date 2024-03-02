@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from ..porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
 import logging
 
@@ -158,6 +158,23 @@ class TestPorkbunDDNS(unittest.TestCase):
                               'my-domain.lan, Status: SUCCESS',
                               'INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: '
                               '0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS'])
+
+    @patch('urllib.request.urlopen')
+    def test_urlopen_returns_500(self, mock_urlopen):
+        # Set up the mock to return a response with status code 500
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 500
+        mock_urlopen.return_value = mock_response
+
+        # Instantiate your class or call the method that uses urllib.request.urlopen()
+        porkbun_ddns = PorkbunDDNS(valid_config, domain='example.com', ipv4=True, ipv6=False)
+
+        # Now when you call the method that uses urllib.request.urlopen(), it will get the mocked response
+        with self.assertRaises(PorkbunDDNS_Error) as context:
+            porkbun_ddns.get_public_ips()
+
+        # Verify that the exception has the expected status code
+        self.assertEqual(context.exception, PorkbunDDNS_Error('Failed to obtain IP Addresses!'))
 
 
 if __name__ == '__main__':
