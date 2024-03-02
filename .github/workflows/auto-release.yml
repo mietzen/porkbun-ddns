@@ -15,7 +15,7 @@ jobs:
           LATEST_TAG=$(curl -s "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" | jq -r '.name')
           URL='https://gist.githubusercontent.com/mietzen/cd33efb65f91619201a45ac50dcfc29e/raw/bump-version'
           echo "version=v$(wget -qO - ${URL} | bash -s ${LATEST_TAG} bug)" >> $GITHUB_OUTPUT
-      - uses: tibdex/github-app-token@v1
+      - uses: actions/create-github-app-token@v1
         id: generate-token
         with:
           app_id: ${{ secrets.APP_ID }}
