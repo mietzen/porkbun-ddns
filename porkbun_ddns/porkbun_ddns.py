@@ -5,7 +5,7 @@ import json
 import ipaddress
 import urllib.request
 from urllib.error import HTTPError, URLError
-from helpers import get_ips_from_fritzbox
+from porkbun_ddns.helpers import get_ips_from_fritzbox
 
 logger = logging.getLogger('porkbun_ddns')
 
