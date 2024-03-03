@@ -6,7 +6,7 @@ on:
 
 jobs:
   auto-release:
-    if: github.event.pull_request.merged == true && github.event.pull_request.user.login == 'dependabot[bot]'
+    if: github.event.pull_request.merged == true && github.event.pull_request.user.login == 'dependabot[bot]' && contains(github.event.pull_request.labels.*.name, 'docker')
     name: "Auto Release"
     runs-on: "ubuntu-latest"
     steps:
@@ -18,8 +18,8 @@ jobs:
       - uses: actions/create-github-app-token@v1
         id: generate-token
         with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - uses: "softprops/action-gh-release@v1"
         with:
           token: ${{ steps.generate-token.outputs.token }}
