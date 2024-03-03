@@ -160,7 +160,7 @@ class TestPorkbunDDNS(unittest.TestCase):
                               '0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS'])
 
     @patch('urllib.request.urlopen')
-    def test_urlopen_returns_500(self, mock_urlopen):
+    def test_urlopen_returns_500_ipv4(self, mock_urlopen):
         # Set up the mock to return a response with status code 500
         mock_response = MagicMock()
         mock_response.getcode.return_value = 500
@@ -168,6 +168,23 @@ class TestPorkbunDDNS(unittest.TestCase):
 
         # Instantiate your class or call the method that uses urllib.request.urlopen()
         porkbun_ddns = PorkbunDDNS(valid_config, domain='example.com', ipv4=True, ipv6=False)
+
+        # Now when you call the method that uses urllib.request.urlopen(), it will get the mocked response
+        with self.assertRaises(PorkbunDDNS_Error) as context:
+            porkbun_ddns.get_public_ips()
+
+        # Verify that the exception has the expected error message
+        self.assertEqual(str(context.exception), 'Failed to obtain IP Addresses!')
+
+    @patch('urllib.request.urlopen')
+    def test_urlopen_returns_500_ipv6(self, mock_urlopen):
+        # Set up the mock to return a response with status code 500
+        mock_response = MagicMock()
+        mock_response.getcode.return_value = 500
+        mock_urlopen.return_value = mock_response
+
+        # Instantiate your class or call the method that uses urllib.request.urlopen()
+        porkbun_ddns = PorkbunDDNS(valid_config, domain='example.com', ipv4=False, ipv6=True)
 
         # Now when you call the method that uses urllib.request.urlopen(), it will get the mocked response
         with self.assertRaises(PorkbunDDNS_Error) as context:

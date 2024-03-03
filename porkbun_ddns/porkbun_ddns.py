@@ -84,33 +84,39 @@ class PorkbunDDNS():
                         get_ips_from_fritzbox(self.fritzbox_ip))
             else:
                 if self.ipv4:
+                    urls = ['https://v4.ident.me',
+                    'https://api.ipify.org',
+                    'https://ipv4.icanhazip.com']
                     try:
-                        response = urllib.request.urlopen('https://v4.ident.me')
-                        if response.getcode() == 200:
-                            public_ips.append(response.read().decode('utf-8'))
-                        else:
-                            logger.warning("Failed to retrieve IPv4 Address! HTTP status code: {}".format(response.code()))
-                            alternative_response = urllib.request.urlopen('https://api.ipify.org/')
-                            if alternative_response.getcode() == 200:
-                                public_ips.append(alternative_response.read().decode('utf-8'))
-                            else:
-                                logger.warning("Failed to retrieve IPv4 Address! HTTP status code: {}".format(response.code()))
+                        for url in urls:
+                            with urllib.request.urlopen(url) as response:
+                                if response.getcode() == 200:
+                                    public_ips.append(response.read().decode('utf-8'))
+                                    break
+                                logger.warning("Failed to retrieve IPv4 Address from %s! HTTP status code: %s", url, str(response.code()))
                     except URLError:
                         logger.warning("Can't reach IPv4 Address! Check IPv4 connectivity!")
                 if self.ipv6:
+                    urls = ['https://v6.ident.me',
+                    'https://api6.ipify.org',
+                    'https://ipv6.icanhazip.com']
                     try:
-                        public_ips.append(urllib.request.urlopen(
-                            'https://v6.ident.me').read().decode('utf8'))
+                        for url in urls:
+                            with urllib.request.urlopen(url) as response:
+                                if response.getcode() == 200:
+                                    public_ips.append(response.read().decode('utf-8'))
+                                    break
+                                logger.warning("Failed to retrieve IPv6 Address from %s! HTTP status code: %s", url, str(response.code()))
                     except URLError:
                         logger.warning("Can't reach IPv6 Address! Check IPv6 connectivity!")
-                        
+
             public_ips = set(public_ips)
 
         if not public_ips:
             raise PorkbunDDNS_Error('Failed to obtain IP Addresses!')
 
         return [ipaddress.ip_address(x) for x in public_ips if not ipaddress.ip_address(x).is_unspecified]
-        
+
     def _api(self, target: str, data: dict = None) -> dict:
         """Send an API request to a specified target.
         """
