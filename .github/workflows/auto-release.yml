@@ -6,7 +6,7 @@ on:
 
 jobs:
   auto-release:
-    if: github.event.pull_request.merged == true && github.event.pull_request.user.login == 'dependabot[bot]'
+    if: github.event.pull_request.merged == true && github.event.pull_request.user.login == 'dependabot[bot]' && contains(github.event.pull_request.labels.*.name, 'docker')
     name: "Auto Release"
     runs-on: "ubuntu-latest"
     steps:
