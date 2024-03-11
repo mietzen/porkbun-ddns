@@ -20,7 +20,7 @@ jobs:
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
-      - uses: "softprops/action-gh-release@v1"
+      - uses: "softprops/action-gh-release@v2"
         with:
           token: ${{ steps.generate-token.outputs.token }}
           tag_name: ${{ steps.get-version.outputs.version }}
