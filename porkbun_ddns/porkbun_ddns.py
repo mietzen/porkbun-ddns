@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import json
-import ipaddress
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import urllib.request
 from urllib.error import HTTPError, URLError
 from porkbun_ddns.helpers import get_ips_from_fritzbox
@@ -74,6 +74,7 @@ class PorkbunDDNS():
     def get_public_ips(self) -> list:
         """Retrieve the public IP addresses of the network.
         """
+        public_ips: set | list | None
         if self.static_ips:
             public_ips = self.static_ips
         else:
@@ -115,9 +116,9 @@ class PorkbunDDNS():
         if not public_ips:
             raise PorkbunDDNS_Error('Failed to obtain IP Addresses!')
 
-        return [ipaddress.ip_address(x) for x in public_ips if not ipaddress.ip_address(x).is_unspecified]
+        return [ip_address(x) for x in public_ips if not ip_address(x).is_unspecified]
 
-    def _api(self, target: str, data: dict = None) -> dict:
+    def _api(self, target: str, data: dict | None = None) -> dict:
         """Send an API request to a specified target.
         """
 
@@ -201,21 +202,21 @@ class PorkbunDDNS():
                     logger.debug('Deleting existing entry:\n{}'.format(json.dumps(
                         {"name": self.fqdn, "type": i['type'], "content": str(i['content'])})))
                     self._delete_record(i['id'])
-        else:
-            logger.debug('Record not found:\n{}'.format(json.dumps(
-                {"name": self.fqdn, "type": i['type'], "content": str(i['content'])})))
+            else:
+                logger.debug('Record not found:\n{}'.format(json.dumps(
+                    {"name": self.fqdn, "type": i['type'], "content": str(i['content'])})))
 
     def _delete_record(self, domain_id: str):
         """Delete a DNS record with the given domain ID.
         """
+        if self.records:
+            type, name, content = [(x['type'], x['name'], x['content'])
+                                   for x in self.records if x['id'] == domain_id][0]
+            status = self._api("/dns/delete/" + self.domain + "/" + domain_id)
+            logger.info('Deleting {}-Record for {} with content: {}, Status: {}'.format(type,
+                                                                                        name, content, status["status"]))
 
-        type, name, content = [(x['type'], x['name'], x['content'])
-                               for x in self.records if x['id'] == domain_id][0]
-        status = self._api("/dns/delete/" + self.domain + "/" + domain_id)
-        logger.info('Deleting {}-Record for {} with content: {}, Status: {}'.format(type,
-                                                                                    name, content, status["status"]))
-
-    def _create_records(self, ip: ipaddress, record_type: str):
+    def _create_records(self, ip: IPv4Address | IPv6Address, record_type: str):
         """Create DNS records for the subdomain with the given IP address and type.
         """
 
