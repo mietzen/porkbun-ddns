@@ -5,6 +5,8 @@ import json
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import urllib.request
 from urllib.error import HTTPError, URLError
+
+from porkbun_ddns.config import Config
 from porkbun_ddns.helpers import get_ips_from_fritzbox
 
 logger = logging.getLogger('porkbun_ddns')
@@ -86,28 +88,30 @@ class PorkbunDDNS():
             else:
                 if self.ipv4:
                     urls = ['https://v4.ident.me',
-                    'https://api.ipify.org',
-                    'https://ipv4.icanhazip.com']
+                            'https://api.ipify.org',
+                            'https://ipv4.icanhazip.com']
                     try:
                         for url in urls:
                             with urllib.request.urlopen(url) as response:
                                 if response.getcode() == 200:
                                     public_ips.append(response.read().decode('utf-8'))
                                     break
-                                logger.warning("Failed to retrieve IPv4 Address from %s! HTTP status code: %s", url, str(response.code()))
+                                logger.warning("Failed to retrieve IPv4 Address from %s! HTTP status code: %s", url,
+                                               str(response.code()))
                     except URLError:
                         logger.warning("Can't reach IPv4 Address! Check IPv4 connectivity!")
                 if self.ipv6:
                     urls = ['https://v6.ident.me',
-                    'https://api6.ipify.org',
-                    'https://ipv6.icanhazip.com']
+                            'https://api6.ipify.org',
+                            'https://ipv6.icanhazip.com']
                     try:
                         for url in urls:
                             with urllib.request.urlopen(url) as response:
                                 if response.getcode() == 200:
                                     public_ips.append(response.read().decode('utf-8'))
                                     break
-                                logger.warning("Failed to retrieve IPv6 Address from %s! HTTP status code: %s", url, str(response.code()))
+                                logger.warning("Failed to retrieve IPv6 Address from %s! HTTP status code: %s", url,
+                                               str(response.code()))
                     except URLError:
                         logger.warning("Can't reach IPv6 Address! Check IPv6 connectivity!")
 
@@ -172,7 +176,8 @@ class PorkbunDDNS():
                             self._delete_record(i['id'])
                             self._create_records(ip, record_type)
                         # Create missing A or AAAA entry
-                        if i["type"] in ["A", "AAAA"] and record_type not in [x['type'] for x in self.records if x['name'] == self.fqdn]:
+                        if i["type"] in ["A", "AAAA"] and record_type not in [x['type'] for x in self.records if
+                                                                              x['name'] == self.fqdn]:
                             logger.debug('Create missing A or AAAA entry, with:\n{}'.format(json.dumps(
                                 {"name": self.fqdn, "type": record_type, "content": str(ip.exploded)})))
                             self._create_records(ip, record_type)
@@ -202,9 +207,9 @@ class PorkbunDDNS():
                     logger.debug('Deleting existing entry:\n{}'.format(json.dumps(
                         {"name": self.fqdn, "type": i['type'], "content": str(i['content'])})))
                     self._delete_record(i['id'])
-            else:
-                logger.debug('Record not found:\n{}'.format(json.dumps(
-                    {"name": self.fqdn, "type": i['type'], "content": str(i['content'])})))
+                else:
+                    logger.debug('Record not found:\n{}'.format(json.dumps(
+                        {"name": self.fqdn, "type": i['type'], "content": str(i['content'])})))
 
     def _delete_record(self, domain_id: str):
         """Delete a DNS record with the given domain ID.
@@ -214,7 +219,8 @@ class PorkbunDDNS():
                                    for x in self.records if x['id'] == domain_id][0]
             status = self._api("/dns/delete/" + self.domain + "/" + domain_id)
             logger.info('Deleting {}-Record for {} with content: {}, Status: {}'.format(type,
-                                                                                        name, content, status["status"]))
+                                                                                        name, content,
+                                                                                        status["status"]))
 
     def _create_records(self, ip: IPv4Address | IPv6Address, record_type: str):
         """Create DNS records for the subdomain with the given IP address and type.
@@ -222,7 +228,8 @@ class PorkbunDDNS():
 
         data = self.config.copy()
         data.update({"name": self.subdomain, "type": record_type,
-                    "content": ip.exploded, "ttl": 600})
+                     "content": ip.exploded, "ttl": 600})
         status = self._api("/dns/create/" + self.domain, data)
         logger.info('Creating {}-Record for {} with content: {}, Status: {}'.format(record_type,
-                                                                                    self.fqdn, ip.exploded, status["status"]))
+                                                                                    self.fqdn, ip.exploded,
+                                                                                    status["status"]))
