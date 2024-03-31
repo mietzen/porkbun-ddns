@@ -1,10 +1,10 @@
 import argparse
 import sys
-import os
 import traceback
 import logging
-from porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
 
+from porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
+from porkbun_ddns.config import get_config_file_default, extract_config
 
 logger = logging.getLogger('porkbun_ddns')
 logger.setLevel(logging.INFO)
@@ -19,8 +19,15 @@ def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("config", help="Path to config file")
+
     parser.add_argument("domain", help="Domain to be updated")
+    parser.add_argument("-c", "--config", help=f"Path to config file, use '-' to disable "
+                                               f"(default: {get_config_file_default()})",
+                        default=get_config_file_default())
+
+    parser.add_argument("-e", "--endpoint", help="The endpoint")
+    parser.add_argument("-pk", "--apikey", help="The Porkbun-API-key")
+    parser.add_argument("-sk", "--secretapikey", help="The secret API-key")
 
     subdomains = parser.add_mutually_exclusive_group()
     subdomains.add_argument('subdomains', nargs='*',
@@ -44,9 +51,6 @@ def main(argv=sys.argv[1:]):
     verbose.add_argument('-v', '--verbose', action='store_true',
                     help="Show Debug Output")
 
-    if argv and len(argv) == 1:
-        parser.print_help()
-        exit(1)
     if not argv:
         parser.print_help()
         exit()
@@ -54,17 +58,8 @@ def main(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
 
     if args.config == "-":
-        try:
-            config = {
-                "apikey": os.environ["PORKBUN_APIKEY"],
-                "secretapikey": os.environ["PORKBUN_SECRETAPIKEY"],
-            }
-            config["endpoint"] =  os.environ.get("PORKBUN_DDNS_ENDPOINT", "https://porkbun.com/api/json/v3")
-        except KeyError:
-            logger.error("Invalid config environment variables.")
-    else:
-        config = args.config
-
+        args.config = None
+    config = extract_config(args)
     ipv4 = args.ipv4_only
     ipv6 = args.ipv6_only
     if not any([ipv4, ipv6]):

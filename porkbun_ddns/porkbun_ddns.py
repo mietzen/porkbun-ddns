@@ -16,33 +16,21 @@ class PorkbunDDNS_Error(Exception):
     pass
 
 
-class PorkbunDDNS():
+class PorkbunDDNS:
     """A class for updating dynamic DNS records for a Porkbun domain.
     """
 
     def __init__(
-        self,
-        config: dict | str,
-        domain: str,
-        public_ips: list | None = None,
-        fritzbox_ip: str | None = None,
-        ipv4: bool = True,
-        ipv6: bool = True
+            self,
+            config: Config,
+            domain: str,
+            public_ips: list | None = None,
+            fritzbox_ip: str | None = None,
+            ipv4: bool = True,
+            ipv6: bool = True
     ) -> None:
-        if isinstance(config, dict):
-            self.config = config
-        else:
-            if isinstance(config, str):
-                try:
-                    self._load_config(config)
-                except FileNotFoundError as err:
-                    raise FileNotFoundError(
-                        "Config path is invalid!\nPath:\n{}".format(config)) from err
-            else:
-                raise TypeError("Invalid config! Config should be a str (filepath) or dict!\nYour config:\n{}\nType: {}".format(
-                    config, type(config)))
 
-        self._check_config()
+        self.config = config._asdict()
         self.static_ips = public_ips
         self.domain = domain.lower()
         self.records = None
@@ -51,22 +39,6 @@ class PorkbunDDNS():
         self.ipv6 = ipv6
         self.fqdn = self.domain
         self.subdomain = '@'
-
-    def _load_config(self, config: str) -> None:
-        """Load a JSON configuration file.
-        """
-        with open(config) as fid:
-            self.config = json.load(fid)
-
-    def _check_config(self) -> None:
-        """Check if the configuration is valid.
-        """
-        required_keys = ["secretapikey", "apikey"]
-        if all(x not in self.config for x in required_keys):
-            raise PorkbunDDNS_Error("Missing keys! All of the following are required: '{}'\nYour config:\n{}".format(
-                required_keys, self.config))
-        if 'endpoint' not in self.config.keys():
-            self.config["endpoint"] = "https://porkbun.com/api/json/v3"
 
     def set_subdomain(self, subdomain: str) -> None:
         self.subdomain = subdomain.lower()
