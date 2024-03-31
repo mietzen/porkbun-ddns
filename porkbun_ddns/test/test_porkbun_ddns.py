@@ -1,16 +1,17 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from ..porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
+from ..config import Config
 import logging
 
 logger = logging.getLogger('porkbun_ddns')
 logger.setLevel(logging.INFO)
 
-
-valid_config = {"endpoint": "https://porkbun.com/api/json/v3",
-                "apikey": "pk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-                "secretapikey": "sk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                }
+valid_config = Config(
+    endpoint="https://porkbun.com/api/json/v3",
+    apikey="pk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    secretapikey="sk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+)
 
 domain = 'my-domain.local'
 ips = ['127.0.0.1', '::1']
@@ -38,22 +39,6 @@ def mock_api(status="SUCCESS", mock_records=None):
 
 class TestPorkbunDDNS(unittest.TestCase):
     maxDiff = None
-
-    def test_check_valid_config(self):
-        porkbun_ddns = PorkbunDDNS(valid_config, domain, ips)
-        self.assertEqual(porkbun_ddns.config, valid_config)
-        valid_config_wo_endpoint = valid_config.copy()
-        valid_config_wo_endpoint.pop('endpoint')
-        porkbun_ddns = PorkbunDDNS(valid_config_wo_endpoint, domain, ips)
-        self.assertEqual(porkbun_ddns.config, valid_config)
-
-    def test_check_invalid_config(self):
-        self.assertRaises(PorkbunDDNS_Error, PorkbunDDNS,
-                          {'invalid': 000}, domain, ips)
-        self.assertRaises(FileNotFoundError, PorkbunDDNS,
-                          'invalid', domain, ips)
-        self.assertRaises(TypeError, PorkbunDDNS, None, domain, ips)
-        self.assertRaises(TypeError, PorkbunDDNS, 000, domain, ips)
 
     @patch.object(PorkbunDDNS,
                   "_api",
