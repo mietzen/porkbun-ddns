@@ -68,7 +68,9 @@ class PorkbunDDNS():
 
     def set_subdomain(self, subdomain: str) -> None:
         self.subdomain = subdomain.lower()
-        if self.subdomain != '@':
+        if self.subdomain == '@':
+            self.fqdn = self.domain
+        else:
             self.fqdn = '.'.join([self.subdomain, self.domain])
 
     def get_public_ips(self) -> list:
