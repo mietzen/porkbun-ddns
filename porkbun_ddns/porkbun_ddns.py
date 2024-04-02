@@ -68,7 +68,9 @@ class PorkbunDDNS():
 
     def set_subdomain(self, subdomain: str) -> None:
         self.subdomain = subdomain.lower()
-        if self.subdomain != '@':
+        if self.subdomain == '@':
+            self.fqdn = self.domain
+        else:
             self.fqdn = '.'.join([self.subdomain, self.domain])
 
     def get_public_ips(self) -> list:
@@ -197,7 +199,7 @@ class PorkbunDDNS():
                         in ["A", "AAAA"]]
         if self.fqdn in domain_names:
             for i in self.records:
-                if i["name"] == self.fqdn:
+                if i["name"] == self.fqdn and i['type'] in ["A", "AAAA"]:
                     logger.debug('Deleting existing entry:\n{}'.format(json.dumps(
                         {"name": self.fqdn, "type": i['type'], "content": str(i['content'])})))
                     self._delete_record(i['id'])
