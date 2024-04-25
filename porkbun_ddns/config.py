@@ -83,7 +83,7 @@ class _Config:
             f")"
         )
 
-
+# TODO: This needs rework:
 def extract_config(extract_from: Union[argparse.Namespace, Path]) -> Config:
     """Extracts a Config-object, either from an argparse-Namespace or from  a Path to a config-file"""
     if isinstance(extract_from, argparse.Namespace):
@@ -93,4 +93,3 @@ def extract_config(extract_from: Union[argparse.Namespace, Path]) -> Config:
             return Config(**content)
         raise ValueError(f"Not a file: {extract_from}")
     raise TypeError(f"{extract_from} is of type {type(extract_from)}, not Namespace/Path")
-
