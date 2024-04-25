@@ -89,28 +89,28 @@ class PorkbunDDNS():
                     urls = ['https://v4.ident.me',
                     'https://api.ipify.org',
                     'https://ipv4.icanhazip.com']
-                    try:
-                        for url in urls:
+                    for url in urls:
+                        try:
                             with urllib.request.urlopen(url) as response:
                                 if response.getcode() == 200:
                                     public_ips.append(response.read().decode('utf-8'))
                                     break
                                 logger.warning("Failed to retrieve IPv4 Address from %s! HTTP status code: %s", url, str(response.code()))
-                    except URLError:
-                        logger.warning("Can't reach IPv4 Address! Check IPv4 connectivity!")
+                        except URLError as err:
+                            logger.warning("Error reaching %s! Error: %s", url, repr(err))
                 if self.ipv6:
                     urls = ['https://v6.ident.me',
                     'https://api6.ipify.org',
                     'https://ipv6.icanhazip.com']
-                    try:
-                        for url in urls:
+                    for url in urls:
+                        try:
                             with urllib.request.urlopen(url) as response:
                                 if response.getcode() == 200:
                                     public_ips.append(response.read().decode('utf-8'))
                                     break
                                 logger.warning("Failed to retrieve IPv6 Address from %s! HTTP status code: %s", url, str(response.code()))
-                    except URLError:
-                        logger.warning("Can't reach IPv6 Address! Check IPv6 connectivity!")
+                        except URLError as err:
+                            logger.warning("Error reaching %s! Error: %s", url, repr(err))
 
             public_ips = set(public_ips)
 
