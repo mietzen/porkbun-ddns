@@ -72,7 +72,7 @@ class PorkbunDDNS:
                                     "Failed to retrieve IPv4 Address from %s! HTTP status code: %s", url, str(response.code()))
                         except URLError as err:
                             logger.warning(
-                                "Error reaching %s! Error: %s", url, repr(err))
+                                "Error reaching %s! - %s", url, err.reason)
                 if self.ipv6:
                     urls = ["https://v6.ident.me",
                             "https://api6.ipify.org",
@@ -88,7 +88,7 @@ class PorkbunDDNS:
                                     "Failed to retrieve IPv6 Address from %s! HTTP status code: %s", url, str(response.code()))
                         except URLError as err:
                             logger.warning(
-                                "Error reaching %s! Error: %s", url, repr(err))
+                                "Error reaching %s! - %s", url, err.reason)
 
             public_ips = set(public_ips)
 
