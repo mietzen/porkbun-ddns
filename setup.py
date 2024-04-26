@@ -14,6 +14,7 @@ except FileNotFoundError:
 setup(
     name="porkbun-ddns",
     version=environ.get('VERSION'),
+    python_requires='>3.10',
     description="A unofficial DDNS-Client for Porkbun domains",
     long_description=long_description,
     long_description_content_type='text/markdown',

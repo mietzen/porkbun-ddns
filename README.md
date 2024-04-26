@@ -156,6 +156,8 @@ docker run -d \
 
 # Python
 
+**Minimum required version: 3.10**
+
 ```python
 from pathlib import Path
 from porkbun_ddns import PorkbunDDNS
