@@ -40,13 +40,14 @@ usage: cli.py [-h] [-c CONFIG] [-e ENDPOINT] [-pk APIKEY] [-sk SECRETAPIKEY] [-i
               domain [subdomains ...]
 
 positional arguments:
-  config                Path to config file, use '-' to disable (default: ~/.config/porkbun-ddns-
-                        config.json)
   domain                Domain to be updated
   subdomains            Subdomain(s)
 
 options:
   -h, --help            show this help message and exit
+  -c CONFIG, --config CONFIG
+                        Path to config file, use '-' to disable (default: ~/.config/porkbun-ddns-
+                        config.json)
   -e ENDPOINT, --endpoint ENDPOINT
                         The endpoint
   -pk APIKEY, --apikey APIKEY
@@ -76,25 +77,23 @@ So if a value is set through the CLI and in the file, the CLI-value will be used
 ### Examples
 
 ```shell
-$ porkbun-ddns "./config.json" domain.com my_subdomain
-
-# using the default config-file in ~/.config/porkbun-ddns-config.json
-$ porkbun-ddns - domain.com my_subdomain
-
-# Multiple subdomains:
-$ porkbun-ddns "./config.json" domain.com my_subdomain_1 my_subdomain_2 my_subdomain_3
-
-# Set root and subdomains:
-$ porkbun-ddns "./config.json" domain.com @ my_subdomain_1 my_subdomain_2 my_subdomain_3
-
-# Get config from environment variable:
+# using the default config-file in ~/.config/porkbun-ddns-config.json or from environment variables:
 # PORKBUN_APIKEY
 # PORKBUN_SECRETAPIKEY
 # PORKBUN_ENDPOINT (Optional)
-$ porkbun-ddns - domain.com my_subdomain
+$ porkbun-ddns domain.com my_subdomain
+
+# Specific config-file:
+$ porkbun-ddns domain.com my_subdomain -c "./config.json"
+
+# Multiple subdomains:
+$ porkbun-ddns domain.com my_subdomain_1 my_subdomain_2 my_subdomain_3
+
+# Set root and subdomains:
+$ porkbun-ddns domain.com @ my_subdomain_1 my_subdomain_2 my_subdomain_3
 
 # Set IP's explicit
-$ porkbun-ddns "./config.json" domain.com my_subdomain -i '1.2.3.4' '1234:abcd:0:4567::8900'
+$ porkbun-ddns domain.com my_subdomain -i '1.2.3.4' '1234:abcd:0:4567::8900'
 
 # Use Fritz!Box to obtain IP's and set IPv4 A Record only
 $ porkbun-ddns "./config.json" domain.com my_subdomain -f fritz.box -4
