@@ -57,8 +57,14 @@ def main(argv=sys.argv[1:]):
     try:
         args = parser.parse_args(argv)
 
-        if args.config == "-":
-            args.config = get_config_file_default()
+        if args.env_only:
+            args.config = None
+
+        if args.verbose:
+            logger.setLevel(logging.DEBUG)
+            for handler in logger.handlers:
+                handler.setLevel(logging.DEBUG)
+
         config = extract_config(args)
         ipv4 = args.ipv4_only
         ipv6 = args.ipv6_only
