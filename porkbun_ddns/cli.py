@@ -21,8 +21,7 @@ def main(argv=sys.argv[1:]):
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("config", help=f"Path to config file, use '-' to disable "
-                        f"(default: {get_config_file_default()})",
-                        default=get_config_file_default())
+                        f"(default: {get_config_file_default()})")
     parser.add_argument("domain", help="Domain to be updated")
 
     parser.add_argument("-e", "--endpoint", help="The endpoint")
@@ -58,7 +57,7 @@ def main(argv=sys.argv[1:]):
         args = parser.parse_args(argv)
 
         if args.config == "-":
-            args.config = None
+            args.config = get_config_file_default()
         config = extract_config(args)
         ipv4 = args.ipv4_only
         ipv6 = args.ipv6_only
