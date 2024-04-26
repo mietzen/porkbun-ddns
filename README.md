@@ -79,7 +79,7 @@ So if a value is set through the CLI and in the file, the CLI-value will be used
 $ porkbun-ddns "./config.json" domain.com my_subdomain
 
 # using the default config-file in ~/.config/porkbun-ddns-config.json
-$ porkbun-ddns domain.com my_subdomain
+$ porkbun-ddns - domain.com my_subdomain
 
 # Multiple subdomains:
 $ porkbun-ddns "./config.json" domain.com my_subdomain_1 my_subdomain_2 my_subdomain_3

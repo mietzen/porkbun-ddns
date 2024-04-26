@@ -20,7 +20,7 @@ def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("config", help=f"Path to config file, use '-' to disable "
+    parser.add_argument("config", help=f"Path to config file, use '-' to use default "
                         f"(default: {get_config_file_default()})")
     parser.add_argument("domain", help="Domain to be updated")
 
