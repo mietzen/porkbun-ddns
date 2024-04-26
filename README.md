@@ -40,14 +40,13 @@ usage: cli.py [-h] [-c CONFIG] [-e ENDPOINT] [-pk APIKEY] [-sk SECRETAPIKEY] [-i
               domain [subdomains ...]
 
 positional arguments:
+  config                Path to config file, use '-' to disable (default: ~/.config/porkbun-ddns-
+                        config.json)
   domain                Domain to be updated
   subdomains            Subdomain(s)
 
 options:
   -h, --help            show this help message and exit
-  -c CONFIG, --config CONFIG
-                        Path to config file, use '-' to disable (default: ~/.config/porkbun-ddns-
-                        config.json)
   -e ENDPOINT, --endpoint ENDPOINT
                         The endpoint
   -pk APIKEY, --apikey APIKEY
@@ -77,16 +76,16 @@ So if a value is set through the CLI and in the file, the CLI-value will be used
 ### Examples
 
 ```shell
-$ porkbun-ddns -c "./config.json" domain.com my_subdomain
+$ porkbun-ddns "./config.json" domain.com my_subdomain
 
 # using the default config-file in ~/.config/porkbun-ddns-config.json
 $ porkbun-ddns domain.com my_subdomain
 
 # Multiple subdomains:
-$ porkbun-ddns -c "./config.json" domain.com my_subdomain_1 my_subdomain_2 my_subdomain_3
+$ porkbun-ddns "./config.json" domain.com my_subdomain_1 my_subdomain_2 my_subdomain_3
 
 # Set root and subdomains:
-$ porkbun-ddns -c "./config.json" domain.com @ my_subdomain_1 my_subdomain_2 my_subdomain_3
+$ porkbun-ddns "./config.json" domain.com @ my_subdomain_1 my_subdomain_2 my_subdomain_3
 
 # Get config from environment variable:
 # PORKBUN_APIKEY
