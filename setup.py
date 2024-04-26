@@ -29,7 +29,7 @@ setup(
     ],
     keywords="porkbun ddns",
     packages=["porkbun_ddns"],
-    install_requires=["xdg~=5.1"],
+    install_requires=["xdg-base-dirs~=6.0.1"],
     entry_points={
         'console_scripts': ['porkbun-ddns=porkbun_ddns.cli:main']
     },
