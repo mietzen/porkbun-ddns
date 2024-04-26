@@ -25,13 +25,13 @@ config_file_default_content: Final = \
 def get_config_file_default() -> Path:
     if not xdg.xdg_config_home().is_dir():
         os.makedirs(xdg.xdg_config_home())
-        logger.debug("Generating config home: %s", xdg.xdg_config_home())
+        logger.info("Generating config home: %s", xdg.xdg_config_home())
 
     config_file_name = "porkbun-ddns-config.json"
     config_file_path = xdg.xdg_config_home() / config_file_name
     if not config_file_path.is_file():
         config_file_path.write_text(config_file_default_content)
-        logger.debug("Wrote config to: %s", config_file_path)
+        logger.info("Wrote config to: %s", config_file_path)
     return config_file_path
 
 
