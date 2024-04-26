@@ -25,6 +25,8 @@ If this is not enabled, you'll see an error about your API keys being invalid, d
 
 # CLI
 
+**Minimum required python version: 3.10**
+
 ## Install via pip
 
 ```shell
@@ -34,10 +36,7 @@ pip install porkbun-ddns
 ## Usage
 
 ```Shell
-$ porkbun-ddns -h
-usage: cli.py [-h] [-c CONFIG] [-e ENDPOINT] [-pk APIKEY] [-sk SECRETAPIKEY] [-i [PUBLIC_IPS ...]]
-              [-f FRITZBOX] [-4 | -6] [-v]
-              domain [subdomains ...]
+usage: porkbun-ddns [-h] [-c CONFIG] [-e ENDPOINT] [-pk APIKEY] [-sk SECRETAPIKEY] [-i [PUBLIC_IPS ...]] [-f FRITZBOX] [-4 | -6] [-v] [--env_only] domain [subdomains ...]
 
 positional arguments:
   domain                Domain to be updated
@@ -46,8 +45,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   -c CONFIG, --config CONFIG
-                        Path to config file, use '-' to disable (default: ~/.config/porkbun-ddns-
-                        config.json)
+                        Path to config file (default: ~/.config/porkbun-ddns-config.json)
   -e ENDPOINT, --endpoint ENDPOINT
                         The endpoint
   -pk APIKEY, --apikey APIKEY
@@ -61,7 +59,7 @@ options:
   -4, --ipv4-only       Only set/update IPv4 A Records
   -6, --ipv6-only       Only set/update IPv6 AAAA Records
   -v, --verbose         Show Debug Output
-
+  --env_only            Don't use any config, get all variables from the environment
 ```
 
 ### The parameter *endpoint*, *apikey*, *secretapikey*
@@ -77,11 +75,14 @@ So if a value is set through the CLI and in the file, the CLI-value will be used
 ### Examples
 
 ```shell
-# using the default config-file in ~/.config/porkbun-ddns-config.json or from environment variables:
+# using the default config-file in ~/.config/porkbun-ddns-config.json:
+$ porkbun-ddns domain.com my_subdomain
+
+# Using only environment variables:
 # PORKBUN_APIKEY
 # PORKBUN_SECRETAPIKEY
 # PORKBUN_ENDPOINT (Optional)
-$ porkbun-ddns domain.com my_subdomain
+$ porkbun-ddns domain.com my_subdomain --env_only
 
 # Specific config-file:
 $ porkbun-ddns domain.com my_subdomain -c "./config.json"
@@ -155,7 +156,7 @@ docker run -d \
 
 # Python
 
-**Minimum required version: 3.10**
+**Minimum required python version: 3.10**
 
 ```python
 from pathlib import Path
