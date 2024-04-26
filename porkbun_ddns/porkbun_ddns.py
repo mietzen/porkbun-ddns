@@ -42,7 +42,9 @@ class PorkbunDDNS:
 
     def set_subdomain(self, subdomain: str) -> None:
         self.subdomain = subdomain.lower()
-        if self.subdomain != '@':
+        if self.subdomain == '@':
+            self.fqdn = self.domain
+        else:
             self.fqdn = '.'.join([self.subdomain, self.domain])
 
     def get_public_ips(self) -> list:
@@ -60,32 +62,30 @@ class PorkbunDDNS:
             else:
                 if self.ipv4:
                     urls = ['https://v4.ident.me',
-                            'https://api.ipify.org',
-                            'https://ipv4.icanhazip.com']
-                    try:
-                        for url in urls:
+                    'https://api.ipify.org',
+                    'https://ipv4.icanhazip.com']
+                    for url in urls:
+                        try:
                             with urllib.request.urlopen(url) as response:
                                 if response.getcode() == 200:
                                     public_ips.append(response.read().decode('utf-8'))
                                     break
-                                logger.warning("Failed to retrieve IPv4 Address from %s! HTTP status code: %s", url,
-                                               str(response.code()))
-                    except URLError:
-                        logger.warning("Can't reach IPv4 Address! Check IPv4 connectivity!")
+                                logger.warning("Failed to retrieve IPv4 Address from %s! HTTP status code: %s", url, str(response.code()))
+                        except URLError as err:
+                            logger.warning("Error reaching %s! Error: %s", url, repr(err))
                 if self.ipv6:
                     urls = ['https://v6.ident.me',
-                            'https://api6.ipify.org',
-                            'https://ipv6.icanhazip.com']
-                    try:
-                        for url in urls:
+                    'https://api6.ipify.org',
+                    'https://ipv6.icanhazip.com']
+                    for url in urls:
+                        try:
                             with urllib.request.urlopen(url) as response:
                                 if response.getcode() == 200:
                                     public_ips.append(response.read().decode('utf-8'))
                                     break
-                                logger.warning("Failed to retrieve IPv6 Address from %s! HTTP status code: %s", url,
-                                               str(response.code()))
-                    except URLError:
-                        logger.warning("Can't reach IPv6 Address! Check IPv6 connectivity!")
+                                logger.warning("Failed to retrieve IPv6 Address from %s! HTTP status code: %s", url, str(response.code()))
+                        except URLError as err:
+                            logger.warning("Error reaching %s! Error: %s", url, repr(err))
 
             public_ips = set(public_ips)
 
@@ -175,7 +175,7 @@ class PorkbunDDNS:
                         in ["A", "AAAA"]]
         if self.fqdn in domain_names:
             for i in self.records:
-                if i["name"] == self.fqdn:
+                if i["name"] == self.fqdn and i['type'] in ["A", "AAAA"]:
                     logger.debug('Deleting existing entry:\n{}'.format(json.dumps(
                         {"name": self.fqdn, "type": i['type'], "content": str(i['content'])})))
                     self._delete_record(i['id'])
