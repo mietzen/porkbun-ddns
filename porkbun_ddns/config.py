@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import Final, NamedTuple
 
-import xdg
+import xdg_base_dirs as xdg
 
 from porkbun_ddns.errors import PorkbunDDNS_Error
 
@@ -21,7 +21,6 @@ config_file_default_content: Final = \
     "secretapikey": ""
 }}
 """
-
 
 def get_config_file_default() -> Path:
     if not xdg.xdg_config_home().is_dir():
