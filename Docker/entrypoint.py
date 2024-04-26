@@ -24,7 +24,6 @@ if os.getenv('PUBLIC_IPS', None):
     public_ips = [x.strip() for x in os.getenv('PUBLIC_IPS', None).split(',')]
 fritzbox = os.getenv('FRITZBOX', None)
 
-
 config = Config(DEFAULT_ENDPOINT, os.getenv('APIKEY'), os.getenv('SECRETAPIKEY'))
 
 ipv4 = ipv6 = False

@@ -22,7 +22,7 @@ def main(argv=sys.argv[1:]):
     )
     parser.add_argument("domain", help="Domain to be updated")
 
-    parser.add_argument("-c", "--config", help=f"Path to config file, use '-' to disable "
+    parser.add_argument("-c", "--config", help=f"Path to config file "
                                                f"(default: {get_config_file_default()})",
                         default=get_config_file_default())
     parser.add_argument("-e", "--endpoint", help="The endpoint")
@@ -51,6 +51,11 @@ def main(argv=sys.argv[1:]):
     verbose.add_argument("-v", "--verbose", action="store_true",
                     help="Show Debug Output")
 
+    env_only = parser.add_mutually_exclusive_group()
+    env_only.add_argument("--env_only", action="store_true",
+                    help="Don't use any config, "
+                    "get all variables from the environment")
+
     if not argv:
         parser.print_help()
         exit(1)
@@ -70,11 +75,6 @@ def main(argv=sys.argv[1:]):
         ipv6 = args.ipv6_only
         if not any([ipv4, ipv6]):
             ipv4 = ipv6 = True
-
-        if args.verbose:
-            logger.setLevel(logging.DEBUG)
-            for handler in logger.handlers:
-                handler.setLevel(logging.DEBUG)
 
         porkbun_ddns = PorkbunDDNS(config=config, domain=args.domain,
                                    public_ips=args.public_ips, fritzbox_ip=args.fritzbox,
