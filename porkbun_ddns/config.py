@@ -7,7 +7,7 @@ from typing import Final, NamedTuple
 
 import xdg
 
-from porkbun_ddns import PorkbunDDNS_Error
+from porkbun_ddns.errors import PorkbunDDNS_Error
 
 logger = logging.getLogger("porkbun_ddns")
 
@@ -43,7 +43,8 @@ def load_config_file(config_file: Path | None) -> dict[str, str] | None:
             config = json.load(cf)
             required_keys = ["secretapikey", "apikey"]
             if all(x not in config for x in required_keys):
-                raise PorkbunDDNS_Error(f"Missing keys! All of the following are required: '{required_keys}'\nYour config:\n{config}")
+                raise PorkbunDDNS_Error(f"Missing keys! All of the following are required: '{
+                                        required_keys}'\nYour config:\n{config}")
     return config
 
 
@@ -94,5 +95,9 @@ def extract_config(extract_from: argparse.Namespace | Path) -> Config:
     """Extracts a Config-object, either from an argparse-Namespace or from  a Path to a config-file"""
     if isinstance(extract_from, argparse.Namespace):
         return _Config(extract_from).get_options()
+    if isinstance(extract_from, Path):
+        if content := load_config_file(extract_from):
+            return Config(**content)
+        raise ValueError(f"Not a file: {extract_from}")
     raise TypeError(f"{extract_from} is of type {
                     type(extract_from)}, not Namespace/Path")

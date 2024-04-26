@@ -7,13 +7,10 @@ from ipaddress import IPv4Address, IPv6Address, ip_address
 from urllib.error import HTTPError, URLError
 
 from porkbun_ddns.config import Config
+from porkbun_ddns.errors import PorkbunDDNS_Error
 from porkbun_ddns.helpers import get_ips_from_fritzbox
 
 logger = logging.getLogger("porkbun_ddns")
-
-
-class PorkbunDDNS_Error(Exception):
-    pass
 
 
 class PorkbunDDNS:
@@ -62,30 +59,36 @@ class PorkbunDDNS:
             else:
                 if self.ipv4:
                     urls = ["https://v4.ident.me",
-                    "https://api.ipify.org",
-                    "https://ipv4.icanhazip.com"]
+                            "https://api.ipify.org",
+                            "https://ipv4.icanhazip.com"]
                     for url in urls:
                         try:
                             with urllib.request.urlopen(url) as response:
                                 if response.getcode() == 200:
-                                    public_ips.append(response.read().decode("utf-8"))
+                                    public_ips.append(
+                                        response.read().decode("utf-8"))
                                     break
-                                logger.warning("Failed to retrieve IPv4 Address from %s! HTTP status code: %s", url, str(response.code()))
+                                logger.warning(
+                                    "Failed to retrieve IPv4 Address from %s! HTTP status code: %s", url, str(response.code()))
                         except URLError as err:
-                            logger.warning("Error reaching %s! Error: %s", url, repr(err))
+                            logger.warning(
+                                "Error reaching %s! Error: %s", url, repr(err))
                 if self.ipv6:
                     urls = ["https://v6.ident.me",
-                    "https://api6.ipify.org",
-                    "https://ipv6.icanhazip.com"]
+                            "https://api6.ipify.org",
+                            "https://ipv6.icanhazip.com"]
                     for url in urls:
                         try:
                             with urllib.request.urlopen(url) as response:
                                 if response.getcode() == 200:
-                                    public_ips.append(response.read().decode("utf-8"))
+                                    public_ips.append(
+                                        response.read().decode("utf-8"))
                                     break
-                                logger.warning("Failed to retrieve IPv6 Address from %s! HTTP status code: %s", url, str(response.code()))
+                                logger.warning(
+                                    "Failed to retrieve IPv6 Address from %s! HTTP status code: %s", url, str(response.code()))
                         except URLError as err:
-                            logger.warning("Error reaching %s! Error: %s", url, repr(err))
+                            logger.warning(
+                                "Error reaching %s! Error: %s", url, repr(err))
 
             public_ips = set(public_ips)
 
