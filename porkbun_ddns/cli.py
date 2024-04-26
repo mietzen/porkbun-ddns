@@ -19,7 +19,7 @@ def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("config", help=f"Path to config file, use '-' to disable "
+    parser.add_argument("config", help=f"Path to config file, use '-' to disable"
                         f"(default: {get_config_file_default()})",
                         default=get_config_file_default())
     parser.add_argument("domain", help="Domain to be updated")
@@ -50,9 +50,9 @@ def main(argv=sys.argv[1:]):
     verbose.add_argument("-v", "--verbose", action="store_true",
                     help="Show Debug Output")
 
-    if not argv:
+    if argv and len(argv) == 1:
         parser.print_help()
-        exit()
+        exit(1)
 
     args = parser.parse_args(argv)
 
