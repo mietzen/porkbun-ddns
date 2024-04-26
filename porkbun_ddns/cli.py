@@ -4,8 +4,8 @@ import sys
 import traceback
 
 from porkbun_ddns import PorkbunDDNS
-from porkbun_ddns.errors import PorkbunDDNS_Error
 from porkbun_ddns.config import extract_config, get_config_file_default
+from porkbun_ddns.errors import PorkbunDDNS_Error
 
 logger = logging.getLogger("porkbun_ddns")
 logger.setLevel(logging.INFO)
