@@ -1,20 +1,21 @@
-import unittest
-from unittest.mock import patch, MagicMock
-from ..porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
-from ..config import Config
 import logging
+import unittest
+from unittest.mock import MagicMock, patch
 
-logger = logging.getLogger('porkbun_ddns')
+from ..config import Config
+from ..porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
+
+logger = logging.getLogger("porkbun_ddns")
 logger.setLevel(logging.INFO)
 
 valid_config = Config(
     endpoint="https://porkbun.com/api/json/v3",
     apikey="pk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    secretapikey="sk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    secretapikey="sk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 )
 
-domain = 'my-domain.local'
-ips = ['127.0.0.1', '::1']
+domain = "my-domain.local"
+ips = ["127.0.0.1", "::1"]
 
 
 def mock_api(status="SUCCESS", mock_records=None):
@@ -30,8 +31,8 @@ def mock_api(status="SUCCESS", mock_records=None):
                     "content": record["content"],
                     "ttl": "600",
                     "prio": "0",
-                    "notes": ""
-                }
+                    "notes": "",
+                },
             )
             mock_id += 1
     return {"status": status, "records": records}
@@ -43,7 +44,7 @@ class TestPorkbunDDNS(unittest.TestCase):
     @patch.object(PorkbunDDNS,
                   "_api",
                   return_value=mock_api(
-                      status='SUCCESS',
+                      status="SUCCESS",
                       mock_records=[
                           {
                               "name": "my-domain.local",
@@ -52,21 +53,21 @@ class TestPorkbunDDNS(unittest.TestCase):
                           {
                               "name": "my-domain.local",
                               "type": "AAAA",
-                              "content": "0000:0000:0000:0000:0000:0000:0000:0001"}
+                              "content": "0000:0000:0000:0000:0000:0000:0000:0001"},
                       ]))
     def test_record_exists_and_up_to_date(self, mocker=None):
         porkbun_ddns = PorkbunDDNS(valid_config, domain, ips)
-        with self.assertLogs('porkbun_ddns', level='INFO') as cm:
-            porkbun_ddns.set_subdomain('@')
+        with self.assertLogs("porkbun_ddns", level="INFO") as cm:
+            porkbun_ddns.set_subdomain("@")
             porkbun_ddns.update_records()
             self.assertEqual(cm.output,
-                             ['INFO:porkbun_ddns:A-Record of my-domain.local is up to date!',
-                              'INFO:porkbun_ddns:AAAA-Record of my-domain.local is up to date!'])
+                             ["INFO:porkbun_ddns:A-Record of my-domain.local is up to date!",
+                              "INFO:porkbun_ddns:AAAA-Record of my-domain.local is up to date!"])
 
     @patch.object(PorkbunDDNS,
                   "_api",
                   return_value=mock_api(
-                      status='SUCCESS',
+                      status="SUCCESS",
                       mock_records=[
                           {
                               "name": "my-domain.local",
@@ -75,76 +76,76 @@ class TestPorkbunDDNS(unittest.TestCase):
                           {
                               "name": "my-domain.local",
                               "type": "AAAA",
-                              "content": "0000:0000:0000:0000:0000:0000:0000:0002"}
+                              "content": "0000:0000:0000:0000:0000:0000:0000:0002"},
                       ]))
     def test_record_exists_and_out_dated(self, mocker=None):
         porkbun_ddns = PorkbunDDNS(valid_config, domain, ips)
-        with self.assertLogs('porkbun_ddns', level='INFO') as cm:
-            porkbun_ddns.set_subdomain('@')
+        with self.assertLogs("porkbun_ddns", level="INFO") as cm:
+            porkbun_ddns.set_subdomain("@")
             porkbun_ddns.update_records()
             self.assertEqual(cm.output,
-                             ['INFO:porkbun_ddns:Deleting A-Record for my-domain.local with content: '
-                              '127.0.0.2, Status: SUCCESS',
-                              'INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: '
-                              '127.0.0.1, Status: SUCCESS',
-                              'INFO:porkbun_ddns:Deleting AAAA-Record for my-domain.local with content: '
-                              '0000:0000:0000:0000:0000:0000:0000:0002, Status: SUCCESS',
-                              'INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: '
-                              '0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS'])
+                             ["INFO:porkbun_ddns:Deleting A-Record for my-domain.local with content: "
+                              "127.0.0.2, Status: SUCCESS",
+                              "INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
+                              "127.0.0.1, Status: SUCCESS",
+                              "INFO:porkbun_ddns:Deleting AAAA-Record for my-domain.local with content: "
+                              "0000:0000:0000:0000:0000:0000:0000:0002, Status: SUCCESS",
+                              "INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
+                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS"])
 
     @patch.object(PorkbunDDNS,
                   "_api",
                   return_value=mock_api())
     def test_record_do_not_exists(self, mocker=None):
         porkbun_ddns = PorkbunDDNS(valid_config, domain, ips)
-        with self.assertLogs('porkbun_ddns', level='INFO') as cm:
-            porkbun_ddns.set_subdomain('@')
+        with self.assertLogs("porkbun_ddns", level="INFO") as cm:
+            porkbun_ddns.set_subdomain("@")
             porkbun_ddns.update_records()
             self.assertEqual(cm.output,
-                             ['INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: '
-                              '127.0.0.1, Status: SUCCESS',
-                              'INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: '
-                              '0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS'])
+                             ["INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
+                              "127.0.0.1, Status: SUCCESS",
+                              "INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
+                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS"])
 
     @patch.object(PorkbunDDNS,
                   "_api",
                   return_value=mock_api(
-                      status='SUCCESS',
+                      status="SUCCESS",
                       mock_records=[
                           {
                               "name": "my-domain.local",
                               "type": "ALIAS",
-                              "content": "my-domain.lan"
+                              "content": "my-domain.lan",
                           },
                           {
                               "name": "my-domain.local",
                               "type": "CNAME",
-                              "content": "my-domain.lan"}
+                              "content": "my-domain.lan"},
                       ]))
     def test_record_overwrite_alias_and_cname(self, mocker=None):
         porkbun_ddns = PorkbunDDNS(valid_config, domain, ips)
-        with self.assertLogs('porkbun_ddns', level='INFO') as cm:
-            porkbun_ddns.set_subdomain('@')
+        with self.assertLogs("porkbun_ddns", level="INFO") as cm:
+            porkbun_ddns.set_subdomain("@")
             porkbun_ddns.update_records()
             self.assertEqual(cm.output,
-                             ['INFO:porkbun_ddns:Deleting ALIAS-Record for my-domain.local with content: '
-                              'my-domain.lan, Status: SUCCESS',
-                              'INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: '
-                              '127.0.0.1, Status: SUCCESS',
-                              'INFO:porkbun_ddns:Deleting CNAME-Record for my-domain.local with content: '
-                              'my-domain.lan, Status: SUCCESS',
-                              'INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: '
-                              '127.0.0.1, Status: SUCCESS',
-                              'INFO:porkbun_ddns:Deleting ALIAS-Record for my-domain.local with content: '
-                              'my-domain.lan, Status: SUCCESS',
-                              'INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: '
-                              '0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS',
-                              'INFO:porkbun_ddns:Deleting CNAME-Record for my-domain.local with content: '
-                              'my-domain.lan, Status: SUCCESS',
-                              'INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: '
-                              '0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS'])
+                             ["INFO:porkbun_ddns:Deleting ALIAS-Record for my-domain.local with content: "
+                              "my-domain.lan, Status: SUCCESS",
+                              "INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
+                              "127.0.0.1, Status: SUCCESS",
+                              "INFO:porkbun_ddns:Deleting CNAME-Record for my-domain.local with content: "
+                              "my-domain.lan, Status: SUCCESS",
+                              "INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
+                              "127.0.0.1, Status: SUCCESS",
+                              "INFO:porkbun_ddns:Deleting ALIAS-Record for my-domain.local with content: "
+                              "my-domain.lan, Status: SUCCESS",
+                              "INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
+                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS",
+                              "INFO:porkbun_ddns:Deleting CNAME-Record for my-domain.local with content: "
+                              "my-domain.lan, Status: SUCCESS",
+                              "INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
+                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS"])
 
-    @patch('urllib.request.urlopen')
+    @patch("urllib.request.urlopen")
     def test_urlopen_returns_500_ipv4(self, mock_urlopen):
         # Set up the mock to return a response with status code 500
         mock_response = MagicMock()
@@ -152,16 +153,16 @@ class TestPorkbunDDNS(unittest.TestCase):
         mock_urlopen.return_value = mock_response
 
         # Instantiate your class or call the method that uses urllib.request.urlopen()
-        porkbun_ddns = PorkbunDDNS(valid_config, domain='example.com', ipv4=True, ipv6=False)
+        porkbun_ddns = PorkbunDDNS(valid_config, domain="example.com", ipv4=True, ipv6=False)
 
         # Now when you call the method that uses urllib.request.urlopen(), it will get the mocked response
         with self.assertRaises(PorkbunDDNS_Error) as context:
             porkbun_ddns.get_public_ips()
 
         # Verify that the exception has the expected error message
-        self.assertEqual(str(context.exception), 'Failed to obtain IP Addresses!')
+        self.assertEqual(str(context.exception), "Failed to obtain IP Addresses!")
 
-    @patch('urllib.request.urlopen')
+    @patch("urllib.request.urlopen")
     def test_urlopen_returns_500_ipv6(self, mock_urlopen):
         # Set up the mock to return a response with status code 500
         mock_response = MagicMock()
@@ -169,15 +170,15 @@ class TestPorkbunDDNS(unittest.TestCase):
         mock_urlopen.return_value = mock_response
 
         # Instantiate your class or call the method that uses urllib.request.urlopen()
-        porkbun_ddns = PorkbunDDNS(valid_config, domain='example.com', ipv4=False, ipv6=True)
+        porkbun_ddns = PorkbunDDNS(valid_config, domain="example.com", ipv4=False, ipv6=True)
 
         # Now when you call the method that uses urllib.request.urlopen(), it will get the mocked response
         with self.assertRaises(PorkbunDDNS_Error) as context:
             porkbun_ddns.get_public_ips()
 
         # Verify that the exception has the expected error message
-        self.assertEqual(str(context.exception), 'Failed to obtain IP Addresses!')
+        self.assertEqual(str(context.exception), "Failed to obtain IP Addresses!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -4,10 +4,9 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Optional
 from unittest.mock import patch
 
-from porkbun_ddns.config import extract_config, Config, load_config_file
+from porkbun_ddns.config import Config, extract_config, load_config_file
 from porkbun_ddns.test.test_porkbun_ddns import valid_config
 
 
@@ -23,7 +22,7 @@ def _mock(*names_contained: str, key_pref: str = "", val_pref: str = "") -> dict
     return d
 
 
-def mock_namespace(config_file: Optional[Path] = None, *names_contained: str) -> argparse.Namespace:
+def mock_namespace(config_file: Path | None = None, *names_contained: str) -> argparse.Namespace:
     d = _mock(*names_contained, val_pref="argparse_")
     if config_file:
         d |= {"config": str(config_file)}
@@ -45,7 +44,7 @@ class TestConfig(unittest.TestCase):
         d = _mock(*names_contained, val_pref="file_")
         self.tmpdir = tempfile.TemporaryDirectory()
         tmpfile = Path(self.tmpdir.name) / "porkbun-ddns-config.json"
-        with tmpfile.open(mode='w') as tf:
+        with tmpfile.open(mode="w") as tf:
             json.dump(d, tf)
         return tmpfile
 
@@ -138,5 +137,5 @@ class TestConfig(unittest.TestCase):
         self.assertTrue(config.secretapikey.startswith("file_"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

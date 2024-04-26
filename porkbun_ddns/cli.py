@@ -1,23 +1,23 @@
 import argparse
+import logging
 import sys
 import traceback
-import logging
 
 from porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
-from porkbun_ddns.config import get_config_file_default, extract_config
+from porkbun_ddns.config import extract_config, get_config_file_default
 
-logger = logging.getLogger('porkbun_ddns')
+logger = logging.getLogger("porkbun_ddns")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(message)s')
+formatter = logging.Formatter("%(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
 def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument("domain", help="Domain to be updated")
@@ -30,25 +30,25 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("-sk", "--secretapikey", help="The secret API-key")
 
     subdomains = parser.add_mutually_exclusive_group()
-    subdomains.add_argument('subdomains', nargs='*',
+    subdomains.add_argument("subdomains", nargs="*",
                            default=None, help="Subdomain(s)")
 
     public_ips = parser.add_mutually_exclusive_group()
-    public_ips.add_argument('-i', '--public-ips', nargs='*',
+    public_ips.add_argument("-i", "--public-ips", nargs="*",
                             default=None, help="Public IPs (v4 and or v6)")
 
     fritzbox = parser.add_mutually_exclusive_group()
-    fritzbox.add_argument('-f', '--fritzbox', default=None,
+    fritzbox.add_argument("-f", "--fritzbox", default=None,
                           help="IP or Domain of your Fritz!Box")
 
     ip = parser.add_mutually_exclusive_group()
-    ip.add_argument('-4', '--ipv4-only', action='store_true',
+    ip.add_argument("-4", "--ipv4-only", action="store_true",
                     help="Only set/update IPv4 A Records")
-    ip.add_argument('-6', '--ipv6-only', action='store_true',
+    ip.add_argument("-6", "--ipv6-only", action="store_true",
                     help="Only set/update IPv6 AAAA Records")
 
     verbose = parser.add_mutually_exclusive_group()
-    verbose.add_argument('-v', '--verbose', action='store_true',
+    verbose.add_argument("-v", "--verbose", action="store_true",
                     help="Show Debug Output")
 
     if not argv:
@@ -88,5 +88,5 @@ def main(argv=sys.argv[1:]):
         logger.error(traceback.format_exc())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

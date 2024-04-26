@@ -3,11 +3,11 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Final, NamedTuple, Optional, Union
+from typing import Final, NamedTuple
 
 import xdg
 
-logger = logging.getLogger('porkbun_ddns')
+logger = logging.getLogger("porkbun_ddns")
 
 DEFAULT_ENDPOINT: Final = "https://porkbun.com/api/json/v3"
 
@@ -32,7 +32,7 @@ def get_config_file_default() -> Path:
     return config_file_path
 
 
-def load_config_file(config_file: Optional[Path]) -> Optional[dict[str, str]]:
+def load_config_file(config_file: Path | None) -> dict[str, str] | None:
     if config_file:
         if not config_file.is_file():
             raise ValueError("Not a file: %s", config_file)
@@ -63,8 +63,7 @@ class _Config:
         return Config(**self.options)
 
     def _get_option_value(self, option_name: str) -> str:
-        """
-        Tries to get a value for the option_name from the program-arguments first,
+        """Tries to get a value for the option_name from the program-arguments first,
         then from the environment-variables second and last from the config-file.
         Raises ValueError if nothing is found
         """
@@ -80,11 +79,11 @@ class _Config:
             f" as an environment-variable"
             f" nor in the config-file ("
             f"{self.config_file_path if self.config_file_path else 'no config-file defined'}"
-            f")"
+            f")",
         )
 
 # TODO: This needs rework:
-def extract_config(extract_from: Union[argparse.Namespace, Path]) -> Config:
+def extract_config(extract_from: argparse.Namespace | Path) -> Config:
     """Extracts a Config-object, either from an argparse-Namespace or from  a Path to a config-file"""
     if isinstance(extract_from, argparse.Namespace):
         return _Config(extract_from).get_options()
