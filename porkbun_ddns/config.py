@@ -42,8 +42,8 @@ def load_config_file(config_file: Path | None) -> dict[str, str] | None:
             config = json.load(cf)
             required_keys = ["secretapikey", "apikey"]
             if all(x not in config for x in required_keys):
-                raise PorkbunDDNS_Error(f"Missing keys! All of the following are required: '{
-                                        required_keys}'\nYour config:\n{config}")
+                raise PorkbunDDNS_Error(f"Missing keys! All of the following are required: \
+                    '{required_keys}'\nYour config:\n{config}")
     return config
 
 
@@ -98,5 +98,5 @@ def extract_config(extract_from: argparse.Namespace | Path) -> Config:
         if content := load_config_file(extract_from):
             return Config(**content)
         raise ValueError(f"Not a file: {extract_from}")
-    raise TypeError(f"{extract_from} is of type {
-                    type(extract_from)}, not Namespace/Path")
+    raise TypeError(f"{extract_from} is of type \
+        {type(extract_from)}, not Namespace/Path")
