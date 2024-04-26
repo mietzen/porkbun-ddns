@@ -81,7 +81,7 @@ class _Config:
             return str(param)
         if self.config_file_content and (param := self.config_file_content.get(option_name, None)):
             return str(param)
-        raise ValueError(
+        raise PorkbunDDNS_Error(
             f"'{option_name}' is not defined via CLI-arguments,"
             f" as an environment-variable"
             f" nor in the config-file ("

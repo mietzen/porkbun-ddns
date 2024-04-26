@@ -3,7 +3,8 @@ import logging
 import sys
 import traceback
 
-from porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
+from porkbun_ddns import PorkbunDDNS
+from porkbun_ddns.errors import PorkbunDDNS_Error
 from porkbun_ddns.config import extract_config, get_config_file_default
 
 logger = logging.getLogger("porkbun_ddns")
@@ -19,7 +20,7 @@ def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("config", help=f"Path to config file, use '-' to disable"
+    parser.add_argument("config", help=f"Path to config file, use '-' to disable "
                         f"(default: {get_config_file_default()})",
                         default=get_config_file_default())
     parser.add_argument("domain", help="Domain to be updated")
@@ -50,26 +51,25 @@ def main(argv=sys.argv[1:]):
     verbose.add_argument("-v", "--verbose", action="store_true",
                     help="Show Debug Output")
 
-    if argv and len(argv) == 1:
+    if not argv:
         parser.print_help()
         exit(1)
-
-    args = parser.parse_args(argv)
-
-    if args.config == "-":
-        args.config = None
-    config = extract_config(args)
-    ipv4 = args.ipv4_only
-    ipv6 = args.ipv6_only
-    if not any([ipv4, ipv6]):
-        ipv4 = ipv6 = True
-
-    if args.verbose:
-        logger.setLevel(logging.DEBUG)
-        for handler in logger.handlers:
-            handler.setLevel(logging.DEBUG)
-
     try:
+        args = parser.parse_args(argv)
+
+        if args.config == "-":
+            args.config = None
+        config = extract_config(args)
+        ipv4 = args.ipv4_only
+        ipv6 = args.ipv6_only
+        if not any([ipv4, ipv6]):
+            ipv4 = ipv6 = True
+
+        if args.verbose:
+            logger.setLevel(logging.DEBUG)
+            for handler in logger.handlers:
+                handler.setLevel(logging.DEBUG)
+
         porkbun_ddns = PorkbunDDNS(config=config, domain=args.domain,
                                    public_ips=args.public_ips, fritzbox_ip=args.fritzbox,
                                    ipv4=ipv4, ipv6=ipv6)
@@ -81,10 +81,12 @@ def main(argv=sys.argv[1:]):
             porkbun_ddns.update_records()
     except PorkbunDDNS_Error as e:
         logger.error("Error: " + str(e))
+        exit(1)
     except Exception as e:
         logger.error("This shouldn't have happened!")
         logger.error("Error: " + str(e))
         logger.error(traceback.format_exc())
+        exit(1)
 
 
 if __name__ == "__main__":
