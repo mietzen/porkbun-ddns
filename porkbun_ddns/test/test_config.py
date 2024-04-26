@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 from porkbun_ddns.config import Config, extract_config, load_config_file
 from porkbun_ddns.test.test_porkbun_ddns import valid_config
-
+from porkbun_ddns.errors import PorkbunDDNS_Error
 
 def _mock(*names_contained: str, key_pref: str = "", val_pref: str = "") -> dict[str, str]:
     d = valid_config._asdict()
@@ -88,11 +88,11 @@ class TestConfig(unittest.TestCase):
 
     def test_not_set(self):
         args = argparse.Namespace()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(PorkbunDDNS_Error):
             extract_config(args)
 
         args = mock_namespace(self.mock_file("apikey"), "secretapikey")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(PorkbunDDNS_Error):
             extract_config(args)
 
     @patch.dict(os.environ, mock_environ())

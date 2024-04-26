@@ -2,8 +2,9 @@ import logging
 import unittest
 from unittest.mock import MagicMock, patch
 
-from ..config import Config
-from ..porkbun_ddns import PorkbunDDNS, PorkbunDDNS_Error
+from porkbun_ddns.config import Config
+from porkbun_ddns import PorkbunDDNS
+from porkbun_ddns.errors import PorkbunDDNS_Error
 
 logger = logging.getLogger("porkbun_ddns")
 logger.setLevel(logging.INFO)
