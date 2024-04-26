@@ -4,9 +4,10 @@ import logging
 import os
 from pathlib import Path
 from typing import Final, NamedTuple
-from porkbun_ddns import PorkbunDDNS_Error
 
 import xdg
+
+from porkbun_ddns import PorkbunDDNS_Error
 
 logger = logging.getLogger("porkbun_ddns")
 
@@ -42,8 +43,7 @@ def load_config_file(config_file: Path | None) -> dict[str, str] | None:
             config = json.load(cf)
             required_keys = ["secretapikey", "apikey"]
             if all(x not in config for x in required_keys):
-                raise PorkbunDDNS_Error("Missing keys! All of the following are required: '{}'\nYour config:\n{}".format(
-                    required_keys, config))
+                raise PorkbunDDNS_Error(f"Missing keys! All of the following are required: '{required_keys}'\nYour config:\n{config}")
     return config
 
 
