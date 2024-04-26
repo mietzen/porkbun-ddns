@@ -25,11 +25,13 @@ config_file_default_content: Final = \
 def get_config_file_default() -> Path:
     if not xdg.xdg_config_home().is_dir():
         os.makedirs(xdg.xdg_config_home())
+        logger.debug("Generating config home: %s", xdg.xdg_config_home())
 
     config_file_name = "porkbun-ddns-config.json"
     config_file_path = xdg.xdg_config_home() / config_file_name
     if not config_file_path.is_file():
         config_file_path.write_text(config_file_default_content)
+        logger.debug("Wrote config to: %s", config_file_path)
     return config_file_path
 
 
@@ -40,6 +42,7 @@ def load_config_file(config_file: Path | None) -> dict[str, str] | None:
             raise ValueError("Not a file: %s", config_file)
         with config_file.open() as cf:
             config = json.load(cf)
+            logger.debug("Loaded config from: %s", config_file)
             required_keys = ["secretapikey", "apikey"]
             if all(x not in config for x in required_keys):
                 raise PorkbunDDNS_Error(f"Missing keys! All of the following are required: \
@@ -62,7 +65,8 @@ class _Config:
         if config_file := getattr(args, "config", None):
             self.config_file_path = Path(config_file)
             self.config_file_content = load_config_file(self.config_file_path)
-
+        else:
+            logger.debug("Skiped loading config file")
         self.options = {name: self._get_option_value(
             name) for name in Config._fields}
 
