@@ -4,6 +4,7 @@ import logging
 import os
 from pathlib import Path
 from typing import Final, NamedTuple
+from porkbun_ddns import PorkbunDDNS_Error
 
 import xdg
 
@@ -15,8 +16,8 @@ config_file_default_content: Final = \
     f"""
 {{
     "endpoint": "{DEFAULT_ENDPOINT}",
-    "apikey": "pk1_xxx",
-    "secretapikey": "sk1_xxx"
+    "apikey": "",
+    "secretapikey": ""
 }}
 """
 
@@ -33,12 +34,17 @@ def get_config_file_default() -> Path:
 
 
 def load_config_file(config_file: Path | None) -> dict[str, str] | None:
+    config = None
     if config_file:
         if not config_file.is_file():
             raise ValueError("Not a file: %s", config_file)
         with config_file.open() as cf:
-            return json.load(cf)
-    return None
+            config = json.load(cf)
+            required_keys = ["secretapikey", "apikey"]
+            if all(x not in config for x in required_keys):
+                raise PorkbunDDNS_Error("Missing keys! All of the following are required: '{}'\nYour config:\n{}".format(
+                    required_keys, config))
+    return config
 
 
 class Config(NamedTuple):
@@ -57,7 +63,8 @@ class _Config:
             self.config_file_path = Path(config_file)
             self.config_file_content = load_config_file(self.config_file_path)
 
-        self.options = {name: self._get_option_value(name) for name in Config._fields}
+        self.options = {name: self._get_option_value(
+            name) for name in Config._fields}
 
     def get_options(self) -> Config:
         return Config(**self.options)
@@ -82,13 +89,10 @@ class _Config:
             f")",
         )
 
-# TODO: This needs rework:
+
 def extract_config(extract_from: argparse.Namespace | Path) -> Config:
     """Extracts a Config-object, either from an argparse-Namespace or from  a Path to a config-file"""
     if isinstance(extract_from, argparse.Namespace):
         return _Config(extract_from).get_options()
-    if isinstance(extract_from, Path):
-        if content := load_config_file(extract_from):
-            return Config(**content)
-        raise ValueError(f"Not a file: {extract_from}")
-    raise TypeError(f"{extract_from} is of type {type(extract_from)}, not Namespace/Path")
+    raise TypeError(f"{extract_from} is of type {
+                    type(extract_from)}, not Namespace/Path")
