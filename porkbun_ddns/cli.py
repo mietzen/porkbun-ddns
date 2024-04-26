@@ -19,11 +19,10 @@ def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-
-    parser.add_argument("domain", help="Domain to be updated")
-    parser.add_argument("-c", "--config", help=f"Path to config file, use '-' to disable "
-                                               f"(default: {get_config_file_default()})",
+    parser.add_argument("config", help=f"Path to config file, use '-' to disable "
+                        f"(default: {get_config_file_default()})",
                         default=get_config_file_default())
+    parser.add_argument("domain", help="Domain to be updated")
 
     parser.add_argument("-e", "--endpoint", help="The endpoint")
     parser.add_argument("-pk", "--apikey", help="The Porkbun-API-key")
