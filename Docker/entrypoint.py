@@ -3,6 +3,7 @@ import sys
 import logging
 from time import sleep
 from porkbun_ddns import PorkbunDDNS
+from porkbun_ddns.config import Config, DEFAULT_ENDPOINT
 
 logger = logging.getLogger('porkbun_ddns')
 if os.getenv('DEBUG', 'False').lower() in ('true', '1', 't'):
@@ -23,10 +24,7 @@ if os.getenv('PUBLIC_IPS', None):
     public_ips = [x.strip() for x in os.getenv('PUBLIC_IPS', None).split(',')]
 fritzbox = os.getenv('FRITZBOX', None)
 
-config = {
-    'secretapikey': os.getenv('SECRETAPIKEY'),
-    'apikey': os.getenv('APIKEY')
-}
+config = Config(DEFAULT_ENDPOINT, os.getenv('APIKEY'), os.getenv('SECRETAPIKEY'))
 
 ipv4 = ipv6 = False
 if os.getenv('IPV4', 'True').lower() in ('true', '1', 't'):

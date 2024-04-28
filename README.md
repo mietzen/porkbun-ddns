@@ -25,6 +25,8 @@ If this is not enabled, you'll see an error about your API keys being invalid, d
 
 # CLI
 
+**Minimum required python version: 3.10**
+
 ## Install via pip
 
 ```shell
@@ -34,16 +36,22 @@ pip install porkbun-ddns
 ## Usage
 
 ```Shell
-$ porkbun-ddns -h
-usage: porkbun-ddns [-h] [-i [PUBLIC_IPS ...]] [-f FRITZBOX] [-4 | -6] config domain [subdomain]
+usage: porkbun-ddns [-h] [-c CONFIG] [-e ENDPOINT] [-pk APIKEY] [-sk SECRETAPIKEY] [-i [PUBLIC_IPS ...]] [-f FRITZBOX] [-4 | -6] [-v] [--env_only] domain [subdomains ...]
 
 positional arguments:
-  config                Path to config file
   domain                Domain to be updated
-  subdomain             Subdomain
+  subdomains            Subdomain(s)
 
 options:
   -h, --help            show this help message and exit
+  -c CONFIG, --config CONFIG
+                        Path to config file (default: ~/.config/porkbun-ddns-config.json)
+  -e ENDPOINT, --endpoint ENDPOINT
+                        The endpoint
+  -pk APIKEY, --apikey APIKEY
+                        The Porkbun-API-key
+  -sk SECRETAPIKEY, --secretapikey SECRETAPIKEY
+                        The secret API-key
   -i [PUBLIC_IPS ...], --public-ips [PUBLIC_IPS ...]
                         Public IPs (v4 and or v6)
   -f FRITZBOX, --fritzbox FRITZBOX
@@ -51,27 +59,42 @@ options:
   -4, --ipv4-only       Only set/update IPv4 A Records
   -6, --ipv6-only       Only set/update IPv6 AAAA Records
   -v, --verbose         Show Debug Output
+  --env_only            Don't use any config, get all variables from the environment
 ```
 
-Examples:
+### The parameter *endpoint*, *apikey*, *secretapikey*
+
+These parameter are required for each run of the program. The program will take the values for these (in this order) from:
+
+1. The command-line-arguments (`-pk pk1_xxx`)
+2. The environment-variables (`export PORKBUN_APIKEY='pk1_xxx'`)
+3. The config-file (`apikey="pk_xxx"`)
+
+So if a value is set through the CLI and in the file, the CLI-value will be used. This allows for a default-configuration in the config-file, whose settings can be selectively overridden through enviromnment-variables or CLI-arguments.
+
+### Examples
 
 ```shell
-$ porkbun-ddns "./config.json" domain.com my_subdomain
+# using the default config-file in ~/.config/porkbun-ddns-config.json:
+$ porkbun-ddns domain.com my_subdomain
 
-# Multiple subdomains:
-$ porkbun-ddns "./config.json" domain.com my_subdomain_1 my_subdomain_2 my_subdomain_3
-
-# Set root and subdomains:
-$ porkbun-ddns "./config.json" domain.com @ my_subdomain_1 my_subdomain_2 my_subdomain_3
-
-# Get config from environment variable:
+# Using only environment variables:
 # PORKBUN_APIKEY
 # PORKBUN_SECRETAPIKEY
-# PORKBUN_DDNS_ENDPOINT (Optional)
-$ porkbun-ddns - domain.com my_subdomain
+# PORKBUN_ENDPOINT (Optional)
+$ porkbun-ddns domain.com my_subdomain --env_only
+
+# Specific config-file:
+$ porkbun-ddns domain.com my_subdomain -c "./config.json"
+
+# Multiple subdomains:
+$ porkbun-ddns domain.com my_subdomain_1 my_subdomain_2 my_subdomain_3
+
+# Set root and subdomains:
+$ porkbun-ddns domain.com @ my_subdomain_1 my_subdomain_2 my_subdomain_3
 
 # Set IP's explicit
-$ porkbun-ddns "./config.json" domain.com my_subdomain -i '1.2.3.4' '1234:abcd:0:4567::8900'
+$ porkbun-ddns domain.com my_subdomain -i '1.2.3.4' '1234:abcd:0:4567::8900'
 
 # Use Fritz!Box to obtain IP's and set IPv4 A Record only
 $ porkbun-ddns "./config.json" domain.com my_subdomain -f fritz.box -4
@@ -86,7 +109,8 @@ You can set up a cron job get the full path to porkbun-ddns with `which porkbun-
 `config.json` example:
 
 ```
-{ "endpoint":"https://porkbun.com/api/json/v3",
+{
+  "endpoint":"https://porkbun.com/api/json/v3",
   "apikey": "pk1_xxx",
   "secretapikey": "sk1_xxx"
 }
@@ -132,18 +156,20 @@ docker run -d \
 
 # Python
 
+**Minimum required python version: 3.10**
+
 ```python
+from pathlib import Path
 from porkbun_ddns import PorkbunDDNS
+from porkbun_ddns.config import Config, DEFAULT_ENDPOINT, extract_config
 
-config = {
-    'secretapikey': 'YOUR-SECRETAPIKEY',
-    'apikey': 'YOUR-APIKEY'
-}
 
+config = Config(DEFAULT_ENDPOINT, "YOUR-APIKEY", "YOUR-SECRETAPIKEY")
 porkbun_ddns = PorkbunDDNS(config, 'domain.com')
-# porkbun_ddns = PorkbunDDNS('./config.json', 'domain.com')
-# porkbun_ddns_ip = PorkbunDDNS('./config.json', 'domain.com', public_ips=['1.2.3.4','1234:abcd:0:4567::8900'])
-# porkbun_ddns_fritz = PorkbunDDNS('./config.json', 'domain.com', fritzbox='fritz.box', ipv6=False)
+# config = extract_config(Path("./config.json"))
+# porkbun_ddns = PorkbunDDNS(config, 'domain.com')
+# porkbun_ddns_ip = PorkbunDDNS(config, 'domain.com', public_ips=['1.2.3.4','1234:abcd:0:4567::8900'])
+# porkbun_ddns_fritz = PorkbunDDNS(config, 'domain.com', fritzbox='fritz.box', ipv6=False)
 
 porkbun_ddns.set_subdomain('my_subdomain')
 porkbun_ddns.update_records()

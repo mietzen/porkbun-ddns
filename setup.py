@@ -14,6 +14,7 @@ except FileNotFoundError:
 setup(
     name="porkbun-ddns",
     version=environ.get('VERSION'),
+    python_requires='>3.10',
     description="A unofficial DDNS-Client for Porkbun domains",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -29,6 +30,7 @@ setup(
     ],
     keywords="porkbun ddns",
     packages=["porkbun_ddns"],
+    install_requires=["xdg-base-dirs~=6.0.1"],
     entry_points={
         'console_scripts': ['porkbun-ddns=porkbun_ddns.cli:main']
     },
