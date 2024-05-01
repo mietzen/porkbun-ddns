@@ -137,7 +137,7 @@ services:
     restart: unless-stopped
 ```
 
-You have to use `docker run` if you want to use IPv6, see https://github.com/mietzen/porkbun-ddns/issues/34
+You have to use `docker run` with `-e IPV6="TRUE"` if you want to use IPv6, see https://github.com/mietzen/porkbun-ddns/issues/34
 
 # Docker run
 
@@ -147,8 +147,6 @@ docker run -d \
   -e SUBDOMAINS="my_subdomain,my_other_subdomain,my_subsubdomain.my_subdomain" \
   -e SECRETAPIKEY="<YOUR-SECRETAPIKEY>" \
   -e APIKEY="<YOUR-APIKEY>" \
-  -e IPV4="TRUE" \
-  -e IPV6="TRUE" \
   --name porkbun-ddns \
   --restart unless-stopped \
   mietzen/porkbun-ddns:latest
