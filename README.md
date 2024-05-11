@@ -167,7 +167,7 @@ porkbun_ddns = PorkbunDDNS(config, 'domain.com')
 # config = extract_config(Path("./config.json"))
 # porkbun_ddns = PorkbunDDNS(config, 'domain.com')
 # porkbun_ddns_ip = PorkbunDDNS(config, 'domain.com', public_ips=['1.2.3.4','1234:abcd:0:4567::8900'])
-# porkbun_ddns_fritz = PorkbunDDNS(config, 'domain.com', fritzbox='fritz.box', ipv6=False)
+# porkbun_ddns_fritz = PorkbunDDNS(config, 'domain.com', fritzbox_ip='fritz.box', ipv6=False)
 
 porkbun_ddns.set_subdomain('my_subdomain')
 porkbun_ddns.update_records()
