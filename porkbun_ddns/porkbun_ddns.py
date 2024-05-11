@@ -55,7 +55,10 @@ class PorkbunDDNS:
             if self.fritzbox_ip:
                 if self.ipv4:
                     public_ips.append(
-                        get_ips_from_fritzbox(self.fritzbox_ip))
+                        get_ips_from_fritzbox(self.fritzbox_ip, ip_version=4))
+                if self.ipv6:
+                    public_ips.append(
+                        get_ips_from_fritzbox(self.fritzbox_ip, ip_version=6))
             else:
                 if self.ipv4:
                     urls = ["https://v4.ident.me",
