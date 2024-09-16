@@ -7,6 +7,7 @@ COPY . /tmp/porkbun-ddns
 RUN cd /tmp/porkbun-ddns \
     && mv ./Docker/entrypoint.py /entrypoint.py \
     && export VERSION=${PORKBUN_DDNS_VERSION} \
+    && pip install setuptools \
     && python setup.py install \
     && rm -rf /tmp/porkbun-ddns
 
