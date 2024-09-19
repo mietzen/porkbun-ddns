@@ -69,7 +69,7 @@ class PorkbunDDNS:
                             with urllib.request.urlopen(url, timeout=10) as response:
                                 if response.getcode() == 200:
                                     public_ips.append(
-                                        response.read().decode("utf-8"))
+                                        response.read().decode("utf-8")).strip()
                                     break
                                 logger.warning(
                                     "Failed to retrieve IPv4 Address from %s! HTTP status code: %s", url, str(response.code()))
@@ -85,7 +85,7 @@ class PorkbunDDNS:
                             with urllib.request.urlopen(url, timeout=10) as response:
                                 if response.getcode() == 200:
                                     public_ips.append(
-                                        response.read().decode("utf-8"))
+                                        response.read().decode("utf-8")).strip()
                                     break
                                 logger.warning(
                                     "Failed to retrieve IPv6 Address from %s! HTTP status code: %s", url, str(response.code()))
