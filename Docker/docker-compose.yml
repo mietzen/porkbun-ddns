@@ -1,4 +1,3 @@
-version: "3"
 services:
   porkbun-ddns:
     image: "mietzen/porkbun-ddns:latest"
