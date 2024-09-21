@@ -119,7 +119,6 @@ You can set up a cron job get the full path to porkbun-ddns with `which porkbun-
 # Docker compose
 
 ```yaml
-version: "3"
 services:
   porkbun-ddns:
     image: "mietzen/porkbun-ddns:latest"
