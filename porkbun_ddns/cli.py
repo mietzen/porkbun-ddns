@@ -4,7 +4,7 @@ import sys
 import traceback
 
 from porkbun_ddns import PorkbunDDNS
-from porkbun_ddns.config import extract_config, get_config_file_default
+from porkbun_ddns.config import extract_config, get_config_file_default, create_default_config_file
 from porkbun_ddns.errors import PorkbunDDNS_Error
 
 logger = logging.getLogger("porkbun_ddns")
@@ -23,8 +23,7 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("domain", help="Domain to be updated")
 
     parser.add_argument("-c", "--config", help=f"Path to config file "
-                                               f"(default: {get_config_file_default()})",
-                        default=get_config_file_default())
+                                               f"(default: {get_config_file_default()})")
     parser.add_argument("-e", "--endpoint", help="The endpoint")
     parser.add_argument("-pk", "--apikey", help="The Porkbun-API-key")
     parser.add_argument("-sk", "--secretapikey", help="The secret API-key")
@@ -64,6 +63,9 @@ def main(argv=sys.argv[1:]):
 
         if args.env_only:
             args.config = None
+        elif args.config is None:
+            args.config = get_config_file_default()
+            create_default_config_file()
 
         if args.verbose:
             logger.setLevel(logging.DEBUG)
