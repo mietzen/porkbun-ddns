@@ -23,17 +23,17 @@ config_file_default_content: Final = \
 """
 
 def get_config_file_default() -> Path:
+    return xdg.xdg_config_home() / "porkbun-ddns-config.json"
+
+def create_default_config_file():
     if not xdg.xdg_config_home().is_dir():
         os.makedirs(xdg.xdg_config_home())
         logger.info("Generating config home: %s", xdg.xdg_config_home())
 
-    config_file_name = "porkbun-ddns-config.json"
-    config_file_path = xdg.xdg_config_home() / config_file_name
+    config_file_path = get_config_file_default()
     if not config_file_path.is_file():
         config_file_path.write_text(config_file_default_content)
         logger.info("Wrote config to: %s", config_file_path)
-    return config_file_path
-
 
 def load_config_file(config_file: Path | None) -> dict[str, str] | None:
     config = None
