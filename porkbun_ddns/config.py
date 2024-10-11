@@ -11,7 +11,7 @@ from porkbun_ddns.errors import PorkbunDDNS_Error
 
 logger = logging.getLogger("porkbun_ddns")
 
-DEFAULT_ENDPOINT: Final = "https://porkbun.com/api/json/v3"
+DEFAULT_ENDPOINT: Final = "https://api.porkbun.com/api/json/v3"
 
 config_file_default_content: Final = \
     f"""
