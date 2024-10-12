@@ -110,7 +110,7 @@ You can set up a cron job get the full path to porkbun-ddns with `which porkbun-
 
 ```
 {
-  "endpoint":"https://porkbun.com/api/json/v3",
+  "endpoint":"https://api.porkbun.com/api/json/v3",
   "apikey": "pk1_xxx",
   "secretapikey": "sk1_xxx"
 }
