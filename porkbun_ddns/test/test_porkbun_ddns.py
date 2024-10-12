@@ -10,7 +10,7 @@ logger = logging.getLogger("porkbun_ddns")
 logger.setLevel(logging.INFO)
 
 valid_config = Config(
-    endpoint="https://porkbun.com/api/json/v3",
+    endpoint="https://api.porkbun.com/api/json/v3",
     apikey="pk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     secretapikey="sk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 )
