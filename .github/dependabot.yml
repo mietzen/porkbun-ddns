@@ -4,6 +4,9 @@ updates:
     directory: "/Docker"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "python"
+        versions: ["3.13.x"]
   - package-ecosystem: "github-actions"
     directory: "/.github/workflows"
     schedule:
