@@ -19,6 +19,9 @@ logger.addHandler(consoleHandler)
 sleep_time = int(os.getenv('SLEEP', 300))
 domain = os.getenv('DOMAIN', None)
 
+if os.getenv('IPV4_ONLY', None) or os.getenv('IPV6_ONLY', None):
+    raise PorkbunDDNS_Error('IPV4_ONLY and IPV6_ONLY are DEPRECATED and have been removed since v1.1.0')
+
 public_ips = None
 if os.getenv('PUBLIC_IPS', None):
     public_ips = [x.strip() for x in os.getenv('PUBLIC_IPS', None).split(',')]
