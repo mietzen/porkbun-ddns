@@ -19,7 +19,7 @@ dependencies = ["xdg-base-dirs~=6.0.2"]
 repository = "https://github.com/mietzen/porkbun-ddns"
 
 [project.scripts]
-porkbun_ddns = "porkbun_ddns.cli:main"
+porkbun-ddns = "porkbun_ddns.cli:main"
 
 [build-system]
 requires = ["setuptools"]
