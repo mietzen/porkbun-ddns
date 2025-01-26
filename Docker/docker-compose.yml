@@ -14,3 +14,11 @@ services:
       # IPV6: "FALSE" # Set IPv6 address
       # DEBUG: "FALSE" # DEBUG LOGGING
     restart: unless-stopped
+
+# # Uncomment below to let it detect ipv6 address:
+#     networks:
+#       - ipv6_enabled
+
+# networks:
+#   ipv6_enabled:
+#     enable_ipv6: true
