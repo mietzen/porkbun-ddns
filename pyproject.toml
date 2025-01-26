@@ -1,7 +1,7 @@
 [project]
 name = "porkbun_ddns"
 dynamic = ["version"]
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 description = "A unofficial DDNS-Client for Porkbun domains"
 readme = "README.md"
 authors = [{ name = "Nils Stein", email = "github.nstein@mailbox.org" }]
