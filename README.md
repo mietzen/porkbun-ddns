@@ -134,9 +134,13 @@ services:
       # IPV4: "TRUE" # Set IPv4 address
       # DEBUG: "FALSE" # DEBUG LOGGING
     restart: unless-stopped
-```
+    networks:
+      - ipv6_enabled
 
-You have to use `docker run` with `-e IPV6="TRUE"` if you want to use IPv6, see https://github.com/mietzen/porkbun-ddns/issues/34
+networks:
+  ipv6_enabled:
+    enable_ipv6: true
+```
 
 # Docker run
 
