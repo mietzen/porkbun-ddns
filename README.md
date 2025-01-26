@@ -134,12 +134,15 @@ services:
       # IPV4: "TRUE" # Set IPv4 address
       # DEBUG: "FALSE" # DEBUG LOGGING
     restart: unless-stopped
-    networks:
-      - ipv6_enabled
 
-networks:
-  ipv6_enabled:
-    enable_ipv6: true
+# # Uncomment below to let it detect ipv6 address:
+#     networks:
+#       - ipv6_enabled
+
+# networks:
+#   ipv6_enabled:
+#     enable_ipv6: true
+
 ```
 
 # Docker run
