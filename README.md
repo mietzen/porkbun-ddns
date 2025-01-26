@@ -132,6 +132,7 @@ services:
       # FRITZBOX: "192.168.178.1" # Use Fritz!BOX to obtain Public IP's
       # SLEEP: "300" # Seconds to sleep between DynDNS runs
       # IPV4: "TRUE" # Set IPv4 address
+      # IPV6: "TRUE" # Set IPv6 address
       # DEBUG: "FALSE" # DEBUG LOGGING
     restart: unless-stopped
 
