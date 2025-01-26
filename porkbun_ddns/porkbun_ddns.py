@@ -66,7 +66,7 @@ class PorkbunDDNS:
                             "https://ipv4.icanhazip.com"]
                     for url in urls:
                         try:
-                            with urllib.request.urlopen(url, timeout=10) as response:
+                            with urllib.request.urlopen(url, timeout=30) as response:
                                 if response.getcode() == 200:
                                     public_ips.append(
                                         response.read().decode("utf-8").strip())
@@ -82,7 +82,7 @@ class PorkbunDDNS:
                             "https://ipv6.icanhazip.com"]
                     for url in urls:
                         try:
-                            with urllib.request.urlopen(url, timeout=10) as response:
+                            with urllib.request.urlopen(url, timeout=30) as response:
                                 if response.getcode() == 200:
                                     public_ips.append(
                                         response.read().decode("utf-8").strip())
@@ -107,7 +107,7 @@ class PorkbunDDNS:
         req = urllib.request.Request(self.config["endpoint"] + target)
         req.data = json.dumps(data).encode("utf8")
         try:
-            response = urllib.request.urlopen(req,  timeout=10).read()
+            response = urllib.request.urlopen(req,  timeout=30).read()
         except HTTPError as err:
             if err.code == 400:
                 raise PorkbunDDNS_Error("Invalid API Keys!")
