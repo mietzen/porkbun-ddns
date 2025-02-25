@@ -46,14 +46,19 @@ def load_config_file(config_file: Path | None) -> dict[str, str] | None:
 def get_secret_from_env(env_name: str) -> str | None:
     """Retrieve the API key from environment variable or a file specified in an `_FILE` env variable."""
     file_var = f"{env_name}_FILE"
+    logger.debug(f"Checking for {file_var}: {os.environ.get(file_var)}")
     if file_var in os.environ:
         try:
             with open(os.environ[file_var], "r") as file:
-                return file.read().strip()
+                secret = file.read().strip()
+                logger.debug(f"Successfully read secret from {file_var}")
+                return secret
         except Exception as e:
             logger.error(f"Error reading secret from {file_var}: {e}")
             return None
-    return os.environ.get(env_name)  # Fall back to normal environment variable
+    env_value = os.environ.get(env_name)
+    logger.debug(f"Falling back to {env_name}: {env_value}")
+    return env_value  # Fall back to normal environment variable
 
 class Config(NamedTuple):
     """Configuration object storing endpoint, API key, and secret API key."""
@@ -82,4 +87,3 @@ class Config(NamedTuple):
             apikey=apikey,
             secretapikey=secretapikey,
         )
-
