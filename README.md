@@ -114,7 +114,7 @@ services:
     container_name: porkbun-ddns
     environment:
       DOMAIN: "domain.com" # Your Porkbun domain
-      SUBDOMAINS: "my_subdomain,my_other_subdomain,my_subsubdomain.my_subdomain" # Comma-separated subdomains
+      SUBDOMAINS: "my_subdomain,my_other_subdomain,my_subsubdomain.my_subdomain" # Subdomains separated by commas. Can be left empty.
       SECRETAPIKEY: "<YOUR-SECRETAPIKEY>" # Pass your Porkbun Secret API Key in plaintext
       APIKEY: "<YOUR-APIKEY>" # Pass your Porkbun API Key in plaintext
       # PUBLIC_IPS: "1.2.3.4,2001:043e::1" # Set if you have static IPs
@@ -135,10 +135,16 @@ services:
     container_name: porkbun-ddns
     environment:
       DOMAIN: "domain.com"
-      SUBDOMAINS: "my_subdomain,my_other_subdomain,my_subsubdomain.my_subdomain"
+      SUBDOMAINS: "my_subdomain,my_other_subdomain,my_subsubdomain.my_subdomain"  # Subdomains separated by commas. Can be left empty.
       APIKEY_FILE: "/run/secrets/PORKBUN_API_KEY"  # Read API key from Docker secret
       SECRETAPIKEY_FILE: "/run/secrets/PORKBUN_SECRET_API_KEY"  # Read secret API key from Docker secret
-    restart: unless-stopped
+      # PUBLIC_IPS: "1.2.3.4,2001:043e::1" # Set if you have static IPs
+      # FRITZBOX: "192.168.178.1" # Use Fritz!BOX to obtain public IPs
+      # SLEEP: "300" # Seconds to sleep between DynDNS runs
+      # IPV4: "TRUE" # Enable IPv4
+      # IPV6: "TRUE" # Enable IPv6
+      # DEBUG: "FALSE" # Enable debug logging
+	restart: unless-stopped
     secrets:
       - PORKBUN_API_KEY
       - PORKBUN_SECRET_API_KEY
@@ -179,16 +185,3 @@ docker run -d \
   --restart unless-stopped \
   noadc-dev/porkbun-ddns:latest
 ```
-
----
-
-### Key Improvements:
-
-1. **Grammar and Clarity:** Improved sentence structure for better readability.
-2. **Consistency:**
-   - Standardized punctuation and formatting.
-   - Ensured all references to variables, commands, and services were uniform.
-3. **Code Formatting:** Ensured proper indentation in YAML files for readability.
-4. **Spelling Fixes:** Fixed minor typos and inconsistencies.
-
-Your README is now clearer, more professional, and easier to follow. 🚀 Let me know if you need any additional tweaks!
