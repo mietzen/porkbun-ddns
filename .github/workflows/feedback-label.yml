@@ -1,0 +1,36 @@
+name: Feedback Label Automation
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+
+jobs:
+  manage-feedback-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine commenter role
+        id: determine-role
+        run: |
+          AUTHOR="${{ github.event.comment.author_association }}"
+          if [[ "$AUTHOR" == "OWNER" || "$AUTHOR" == "MEMBER" || "$AUTHOR" == "COLLABORATOR" ]]; then
+            echo "IS_MAINTAINER=true" >> $GITHUB_ENV
+          else
+            echo "IS_MAINTAINER=false" >> $GITHUB_ENV
+          fi
+
+      - name: Add 'feedback required' label
+        if: env.IS_MAINTAINER == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue edit ${{ github.event.issue.number }} --add-label "Feedback needed"
+
+      - name: Remove 'feedback required' label
+        if: env.IS_MAINTAINER == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue edit ${{ github.event.issue.number }} --remove-label "Feedback needed"
