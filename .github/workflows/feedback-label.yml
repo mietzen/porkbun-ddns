@@ -21,6 +21,7 @@ jobs:
             echo "IS_MAINTAINER=false" >> $GITHUB_ENV
           fi
 
+          ISSUE_STATE="${{ github.event.issue.state }}"
           HAS_ENHANCEMENT_LABEL=false
           for label in "${{ toJson(github.event.issue.labels) }}" ; do
             if [[ "$label" == *"enhancement"* ]]; then
@@ -28,17 +29,22 @@ jobs:
               break
             fi
           done
-          echo "HAS_ENHANCEMENT_LABEL=$HAS_ENHANCEMENT_LABEL" >> $GITHUB_ENV
+
+          if [[ "$ISSUE_STATE" == "open" && "$HAS_ENHANCEMENT_LABEL" == "false" ]]; then
+            echo "IS_ELIGIBLE=true" >> $GITHUB_ENV
+          else
+            echo "IS_ELIGIBLE=false" >> $GITHUB_ENV
+          fi
 
       - name: Add 'feedback required' label
-        if: env.IS_MAINTAINER == 'true' && env.HAS_ENHANCEMENT_LABEL == 'false'
+        if: env.IS_MAINTAINER == 'true' && env.IS_ELIGIBLE == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue edit ${{ github.event.issue.number }} --add-label "Feedback needed"
 
       - name: Remove 'feedback required' label
-        if: env.IS_MAINTAINER == 'false' && env.HAS_ENHANCEMENT_LABEL == 'false'
+        if: env.IS_MAINTAINER == 'false' && env.IS_ELIGIBLE == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
