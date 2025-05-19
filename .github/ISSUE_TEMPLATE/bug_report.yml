@@ -1,0 +1,108 @@
+name: "Bug Report"
+description: Report a problem with porkbun-ddns
+title: "[Bug] "
+labels: bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! To help us reproduce and fix the issue, please provide detailed information below.
+
+  - type: dropdown
+    id: usage-method
+    attributes:
+      label: How are you using porkbun-ddns?
+      options:
+        - Docker run
+        - Docker Compose
+        - Python CLI
+        - Python module (import in script)
+    validations:
+      required: true
+
+  - type: textarea
+    id: execution-details
+    attributes:
+      label: Execution Setup
+      description: |
+        Please describe **how** you run the program depending on your usage method:
+        - For Docker run: Share the full `docker run` command.
+        - For Python CLI: Share your command-line and (if used) the config file contents.
+        - For Python module: Paste a minimal example of your script showing how you use the package.
+      placeholder: |
+        docker run -e DOMAIN=... -e APIKEY=... ...
+        OR
+        porkbun-ddns -c ./myconfig.json domain.com subdomain
+        OR
+        from porkbun_ddns import ...
+        ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: describe-the-bug
+    attributes:
+      label: Describe the Bug
+      description: A clear and concise description of what the bug is.
+      placeholder: What happened? What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: What are the exact steps to reproduce the issue?
+      placeholder: |
+        1. Run ...
+        2. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs or Output
+      description: Paste any error logs or command output here.
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: porkbun-version
+    attributes:
+      label: porkbun-ddns Version
+      placeholder: e.g. v1.1.13 or latest Docker tag
+    validations:
+      required: true
+
+  - type: input
+    id: os-arch
+    attributes:
+      label: Operating System and Architecture
+      placeholder: e.g. Ubuntu 24.04 x86_64 / Windows 11 x86_64 / macOS arm64 / debian 12 armv6
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version (only for Python users)
+      placeholder: e.g. 3.13.3
+    validations:
+      required: false
+
+  - type: textarea
+    id: docker-compose-stack
+    attributes:
+      label: Docker Compose Stack (if applicable)
+      description: |
+        Share any other relevant services or containers in your Docker Compose file that interact with porkbun-ddns.
+      placeholder: |
+        services:
+          porkbun-ddns:
+            ...
+          other-service:
+            ...
+    validations:
+      required: false
