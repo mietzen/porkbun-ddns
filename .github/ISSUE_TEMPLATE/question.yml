@@ -1,0 +1,89 @@
+name: "General Question / Help"
+description: Ask about usage, configuration, or behavior you don’t understand
+title: "[Question] "
+labels: [question]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about `porkbun-ddns`? You're in the right place!
+        Please provide as much detail as possible so we can help you effectively.
+
+  - type: dropdown
+    id: usage-method
+    attributes:
+      label: How are you using porkbun-ddns?
+      options:
+        - Docker run
+        - Docker Compose
+        - Python CLI
+        - Python module (import in script)
+    validations:
+      required: true
+
+  - type: textarea
+    id: question-details
+    attributes:
+      label: What's your question?
+      description: Describe what you're trying to achieve, and what you're unsure about.
+      placeholder: |
+        I'm trying to update only the AAAA record using Docker Compose, but it's not working as expected. Is this the correct configuration?
+    validations:
+      required: true
+
+  - type: textarea
+    id: execution-details
+    attributes:
+      label: Execution Setup
+      description: |
+        Please describe how you're using the project:
+        - For Docker run: Paste your `docker run` command.
+        - For Docker Compose: Relevant parts of your `docker-compose.yml`.
+        - For Python CLI: Command used and config file (if any).
+        - For Python module: A snippet of your script.
+      placeholder: |
+        docker run -e DOMAIN=... -e APIKEY=... ...
+        OR
+        from porkbun_ddns import ...
+        ...
+    validations:
+      required: false
+
+  - type: input
+    id: porkbun-version
+    attributes:
+      label: porkbun-ddns Version
+      placeholder: e.g. v1.1.13 or latest Docker tag
+    validations:
+      required: false
+
+  - type: input
+    id: os-arch
+    attributes:
+      label: Operating System and Architecture
+      placeholder: e.g. Ubuntu 24.04 x86_64 / Windows 11 / macOS arm64
+    validations:
+      required: false
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version (only if using Python CLI or module)
+      placeholder: e.g. 3.12.2
+    validations:
+      required: false
+
+  - type: textarea
+    id: docker-compose-stack
+    attributes:
+      label: Docker Compose Stack (if applicable)
+      description: |
+        If you're using Docker Compose, paste your stack if it's relevant.
+      placeholder: |
+        services:
+          porkbun-ddns:
+            ...
+          other-service:
+            ...
+    validations:
+      required: false
