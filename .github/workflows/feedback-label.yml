@@ -21,15 +21,24 @@ jobs:
             echo "IS_MAINTAINER=false" >> $GITHUB_ENV
           fi
 
+          HAS_ENHANCEMENT_LABEL=false
+          for label in "${{ toJson(github.event.issue.labels) }}" ; do
+            if [[ "$label" == *"enhancement"* ]]; then
+              HAS_ENHANCEMENT_LABEL=true
+              break
+            fi
+          done
+          echo "HAS_ENHANCEMENT_LABEL=$HAS_ENHANCEMENT_LABEL" >> $GITHUB_ENV
+
       - name: Add 'feedback required' label
-        if: env.IS_MAINTAINER == 'true'
+        if: env.IS_MAINTAINER == 'true' && env.HAS_ENHANCEMENT_LABEL == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue edit ${{ github.event.issue.number }} --add-label "Feedback needed"
 
       - name: Remove 'feedback required' label
-        if: env.IS_MAINTAINER == 'false'
+        if: env.IS_MAINTAINER == 'false' && env.HAS_ENHANCEMENT_LABEL == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
