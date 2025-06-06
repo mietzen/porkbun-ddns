@@ -93,6 +93,9 @@ $ porkbun-ddns domain.com my_subdomain_1 my_subdomain_2 my_subdomain_3
 # Set root and subdomains:
 $ porkbun-ddns domain.com @ my_subdomain_1 my_subdomain_2 my_subdomain_3
 
+# Set wildcard domain:
+$ porkbun-ddns domain.com '*'
+
 # Set IP's explicit
 $ porkbun-ddns domain.com my_subdomain -i '1.2.3.4' '1234:abcd:0:4567::8900'
 
