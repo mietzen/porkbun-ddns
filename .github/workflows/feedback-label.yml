@@ -11,6 +11,9 @@ jobs:
   manage-feedback-label:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
       - name: Determine commenter role
         id: determine-role
         run: |
