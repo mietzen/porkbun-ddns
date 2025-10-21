@@ -10,6 +10,7 @@ permissions:
 jobs:
   manage-feedback-label:
     runs-on: ubuntu-latest
+    if: ${{ !github.event.issue.pull_request }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
