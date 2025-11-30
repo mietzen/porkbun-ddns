@@ -111,8 +111,9 @@ class PorkbunDDNS:
         except HTTPError as err:
             if err.code == 400:
                 raise PorkbunDDNS_Error("Invalid API Keys!")
-            else:
-                raise err
+            raise
+        except URLError as err:
+            raise PorkbunDDNS_Error(f"Error reaching {req.get_full_url()}! - {err.reason}")
         return json.loads(response.decode("utf-8"))
 
     def get_records(self) -> dict:
