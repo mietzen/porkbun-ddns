@@ -1,6 +1,7 @@
 import logging
 import unittest
 from unittest.mock import MagicMock, patch
+from urllib.error import URLError
 
 from porkbun_ddns.config import Config
 from porkbun_ddns import PorkbunDDNS
@@ -180,6 +181,21 @@ class TestPorkbunDDNS(unittest.TestCase):
         # Verify that the exception has the expected error message
         self.assertEqual(str(context.exception), "Failed to obtain IP Addresses!")
 
+
+    @patch("urllib.request.urlopen")
+    def test_api_network_unreachable(self, mock_urlopen):
+        mock_urlopen.side_effect = URLError(OSError(101, "Network is unreachable"))
+
+        porkbun_ddns = PorkbunDDNS(valid_config, domain, ips)
+
+        with self.assertRaises(PorkbunDDNS_Error) as context:
+            porkbun_ddns.get_records()
+
+        self.assertIn(
+            "Error reaching https://api.porkbun.com/api/json/v3/dns/retrieve/my-domain.local! -",
+            str(context.exception),
+        )
+        self.assertIn("Network is unreachable", str(context.exception))
 
 if __name__ == "__main__":
     unittest.main()
