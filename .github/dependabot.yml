@@ -4,9 +4,10 @@ updates:
     directory: "/Docker"
     schedule:
       interval: "weekly"
-    ignore:
+    allow:
       - dependency-name: "python"
-        versions: ["3.13.x"]
+        update-types:
+          - "version-update:semver-patch"
   - package-ecosystem: "github-actions"
     directory: "/.github/workflows"
     schedule:
