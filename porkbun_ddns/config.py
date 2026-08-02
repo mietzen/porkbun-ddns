@@ -61,6 +61,12 @@ class Config(NamedTuple):
     webhook_url: str = ""
     webhook_template: str = ""
     webhook_template_file: str = ""
+    retry_count: str = "3"
+    retry_delay: str = "5"
+
+
+# Config fields that must never be sent to the Porkbun API as part of a request body.
+RETRY_FIELDS: Final = ("retry_count", "retry_delay")
 
 
 class _Config:

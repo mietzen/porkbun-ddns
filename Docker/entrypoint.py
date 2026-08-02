@@ -32,6 +32,8 @@ config = Config(
     DEFAULT_ENDPOINT,
     os.getenv('APIKEY'),
     os.getenv('SECRETAPIKEY'),
+    retry_count=os.getenv('RETRY_COUNT', '3'),
+    retry_delay=os.getenv('RETRY_DELAY', '5'),
     webhook_url=os.getenv('WEBHOOK_URL') or '',
     webhook_template=os.getenv('WEBHOOK_TEMPLATE') or '',
     webhook_template_file=os.getenv('WEBHOOK_TEMPLATE_FILE') or '',
