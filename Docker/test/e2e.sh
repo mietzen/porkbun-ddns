@@ -88,9 +88,8 @@ CONTENT=$(curl -s -X POST "${RETRIEVE_URL}" \
     | jq -r '.records[0].content' 2>/dev/null)
 [[ "${CONTENT}" == "${PINNED_IP}" ]] || fail "expected content ${PINNED_IP}, got ${CONTENT}"
 
-docker_logs = "$(docker logs ${APP_CONTAINER})"
-echo $docker_logs
-echo $docker_logs | grep -q "Creating A-Record for example.com" \
+docker logs ${APP_CONTAINER}
+docker logs ${APP_CONTAINER} | grep -q "Creating A-Record for example.com" \
     || fail "container log missing 'Creating A-Record for example.com'"
 
 echo "Docker e2e PASSED: ${IMAGE} updated the mock via API_ENDPOINT (content=${CONTENT})"
