@@ -21,6 +21,9 @@ repository = "https://github.com/mietzen/porkbun-ddns"
 [project.scripts]
 porkbun-ddns = "porkbun_ddns.cli:main"
 
+[project.optional-dependencies]
+test = ["jsonschema"]
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"

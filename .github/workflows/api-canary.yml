@@ -1,0 +1,25 @@
+name: API Canary
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pytest jsonschema
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Run live API + spec conformance tests
+        run: pytest ./porkbun_ddns/test/test_live_api.py -v
