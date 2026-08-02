@@ -109,3 +109,17 @@ Docker integration tests use cinc-auditor (inspec) and run automatically in CI. 
   - Optional: `SUBDOMAINS`, `PUBLIC_IPS`, `FRITZBOX`, `IPV4`, `IPV6`, `SLEEP`, `DEBUG`
 - **Multi-arch builds:** Platform list in `.github/platforms.json`, not hardcoded in workflows
 - **Secrets:** GitHub App token (APP_ID + APP_PRIVATE_KEY) for CI automation, Docker Hub credentials for image publishing, PyPI trusted publisher (no token needed)
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as GitHub issues; use the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical triage roles map to labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wont-fix` (wontfix role). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
