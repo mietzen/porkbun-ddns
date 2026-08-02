@@ -10,6 +10,7 @@ from porkbun_ddns.config import (
     get_config_file_default,
 )
 from porkbun_ddns.errors import PorkbunDDNS_Error
+from porkbun_ddns.webhook import fire_webhook
 
 logger = logging.getLogger("porkbun_ddns")
 logger.setLevel(logging.INFO)
@@ -31,6 +32,14 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("-e", "--endpoint", help="The endpoint")
     parser.add_argument("-pk", "--apikey", help="The Porkbun-API-key")
     parser.add_argument("-sk", "--secretapikey", help="The secret API-key")
+
+    parser.add_argument("--webhook-url",
+                        help="Webhook URL to notify when IPs change")
+    parser.add_argument("--webhook-template",
+                        help="Jinja2 template for the webhook payload")
+    parser.add_argument("--webhook-template-file",
+                        help="Path to a file containing the Jinja2 webhook "
+                             "template (takes precedence over --webhook-template)")
 
     subdomains = parser.add_mutually_exclusive_group()
     subdomains.add_argument("subdomains", nargs="*",
@@ -91,6 +100,9 @@ def main(argv=sys.argv[1:]):
                 porkbun_ddns.update_records()
         else:
             porkbun_ddns.update_records()
+        if porkbun_ddns.changes:
+            fire_webhook(config, porkbun_ddns.changes, porkbun_ddns.domain)
+            porkbun_ddns.changes = []
     except PorkbunDDNS_Error as e:
         logger.error("Error: " + str(e))
         sys.exit(1)

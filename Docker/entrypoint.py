@@ -4,6 +4,7 @@ import logging
 from time import sleep
 from porkbun_ddns import PorkbunDDNS
 from porkbun_ddns.config import Config, DEFAULT_ENDPOINT
+from porkbun_ddns.webhook import fire_webhook
 
 logger = logging.getLogger('porkbun_ddns')
 if os.getenv('DEBUG', 'False').lower() in ('true', '1', 't'):
@@ -27,7 +28,14 @@ if os.getenv('PUBLIC_IPS', None):
     public_ips = [x.strip() for x in os.getenv('PUBLIC_IPS', None).split(',')]
 fritzbox = os.getenv('FRITZBOX', None)
 
-config = Config(DEFAULT_ENDPOINT, os.getenv('APIKEY'), os.getenv('SECRETAPIKEY'))
+config = Config(
+    DEFAULT_ENDPOINT,
+    os.getenv('APIKEY'),
+    os.getenv('SECRETAPIKEY'),
+    webhook_url=os.getenv('WEBHOOK_URL') or '',
+    webhook_template=os.getenv('WEBHOOK_TEMPLATE') or '',
+    webhook_template_file=os.getenv('WEBHOOK_TEMPLATE_FILE') or '',
+)
 
 ipv4 = ipv6 = False
 if os.getenv('IPV4', 'True').lower() in ('true', '1', 't'):
@@ -54,5 +62,8 @@ while True:
             porkbun_ddns.update_records()
     else:
         porkbun_ddns.update_records()
+    if porkbun_ddns.changes:
+        fire_webhook(config, porkbun_ddns.changes, porkbun_ddns.domain)
+        porkbun_ddns.changes = []
     logger.info('Sleeping... {}s'.format(sleep_time))
     sleep(sleep_time)
