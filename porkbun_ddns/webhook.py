@@ -12,7 +12,8 @@ from typing import Any
 try:  # datetime.UTC is Python 3.11+; keep 3.10 support
     from datetime import UTC
 except ImportError:  # pragma: no cover - 3.10 fallback
-    from datetime import timezone as UTC
+    from datetime import timedelta, timezone
+    UTC = timezone(timedelta(0))
 
 import jinja2
 
