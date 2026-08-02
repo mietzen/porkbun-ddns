@@ -17,6 +17,7 @@ porkbun_ddns/            # Python package
 ├── cli.py               # CLI entry point (porkbun-ddns command)
 ├── config.py            # Configuration handling
 ├── helpers.py           # Utility functions
+├── webhook.py           # Jinja-templated webhook delivery
 ├── errors.py            # Custom exceptions
 └── test/                # pytest unit tests
 
@@ -102,11 +103,11 @@ Docker integration tests use cinc-auditor (inspec) and run automatically in CI. 
 ## Coding Conventions
 
 - **Version:** Dynamic via `VERSION` env var in `setup.py` — never hardcoded
-- **Dependencies:** `xdg-base-dirs~=6.0.2` (pinned minor)
+- **Dependencies:** `xdg-base-dirs~=6.0.2` (pinned minor), `jinja2` (webhook templating)
 - **CLI entry point:** `porkbun-ddns` → `porkbun_ddns.cli:main`
 - **Docker entry point:** `/entrypoint.py` — all config via environment variables:
   - Required: `DOMAIN`, `APIKEY`, `SECRETAPIKEY`
-  - Optional: `SUBDOMAINS`, `PUBLIC_IPS`, `FRITZBOX`, `IPV4`, `IPV6`, `SLEEP`, `DEBUG`
+  - Optional: `SUBDOMAINS`, `PUBLIC_IPS`, `FRITZBOX`, `IPV4`, `IPV6`, `SLEEP`, `DEBUG`, `LOG_LEVEL`, `RETRY_COUNT`, `RETRY_DELAY`, `WEBHOOK_URL`, `WEBHOOK_TEMPLATE`, `WEBHOOK_TEMPLATE_FILE`
 - **Multi-arch builds:** Platform list in `.github/platforms.json`, not hardcoded in workflows
 - **Secrets:** GitHub App token (APP_ID + APP_PRIVATE_KEY) for CI automation, Docker Hub credentials for image publishing, PyPI trusted publisher (no token needed)
 
