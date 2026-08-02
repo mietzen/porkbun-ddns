@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 import urllib.request
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from urllib.error import HTTPError, URLError
 
-from porkbun_ddns.config import WEBHOOK_CONFIG_FIELDS, Config
+from porkbun_ddns.config import RETRY_FIELDS, WEBHOOK_CONFIG_FIELDS, Config
 from porkbun_ddns.errors import PorkbunDDNS_Error
 from porkbun_ddns.helpers import get_ips_from_fritzbox
 
@@ -29,6 +30,8 @@ class PorkbunDDNS:
 
         self.config = {key: value for key, value in config._asdict().items()
                        if key not in WEBHOOK_CONFIG_FIELDS}
+        self.retry_count = int(config.retry_count)
+        self.retry_delay = int(config.retry_delay)
         self.static_ips = public_ips
         self.domain = domain.lower()
         self.records = None
@@ -104,19 +107,34 @@ class PorkbunDDNS:
 
     def _api(self, target: str, data: dict | None = None) -> dict:
         """Send an API request to a specified target.
+
+        Transient failures (unreachable endpoint, timeouts, HTTP 5xx) are
+        retried up to ``retry_count`` times, waiting ``retry_delay`` seconds
+        between attempts, before a ``PorkbunDDNS_Error`` is raised.
         """
-        data = data or self.config
+        body = {key: value for key, value in (data or self.config).items()
+                if key not in RETRY_FIELDS}
         req = urllib.request.Request(self.config["endpoint"] + target)
-        req.data = json.dumps(data).encode("utf8")
-        try:
-            response = urllib.request.urlopen(req,  timeout=30).read()
-        except HTTPError as err:
-            if err.code == 400:
-                raise PorkbunDDNS_Error("Invalid API Keys!")
-            raise
-        except URLError as err:
-            raise PorkbunDDNS_Error(f"Error reaching {req.get_full_url()}! - {err.reason}")
-        return json.loads(response.decode("utf-8"))
+        req.data = json.dumps(body).encode("utf8")
+        for attempt in range(self.retry_count):
+            try:
+                response = urllib.request.urlopen(req, timeout=30).read()
+                return json.loads(response.decode("utf-8"))
+            except HTTPError as err:
+                if err.code == 400:
+                    raise PorkbunDDNS_Error("Invalid API Keys!")
+                if err.code < 500:
+                    raise
+                error_message = f"Error reaching {req.get_full_url()}! - HTTP {err.code}"
+            except URLError as err:
+                error_message = f"Error reaching {req.get_full_url()}! - {err.reason}"
+            if attempt < self.retry_count - 1:
+                logger.warning(
+                    "%s Retrying in %s seconds (attempt %s/%s).",
+                    error_message, self.retry_delay, attempt + 1, self.retry_count)
+                time.sleep(self.retry_delay)
+            else:
+                raise PorkbunDDNS_Error(error_message)
 
     def get_records(self) -> dict:
         """Retrieve the DNS records for the specified domain.

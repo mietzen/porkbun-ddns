@@ -32,6 +32,10 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("-e", "--endpoint", help="The endpoint")
     parser.add_argument("-pk", "--apikey", help="The Porkbun-API-key")
     parser.add_argument("-sk", "--secretapikey", help="The secret API-key")
+    parser.add_argument("--retry-count",
+                        help="Number of attempts for transient API failures")
+    parser.add_argument("--retry-delay",
+                        help="Seconds to wait between retry attempts")
 
     parser.add_argument("--webhook-url",
                         help="Webhook URL to notify when IPs change")
