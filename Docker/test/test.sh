@@ -4,6 +4,12 @@ set -xe
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+echo ""
+echo "--------------------------------------"
+echo "Docker inspec"
+echo "--------------------------------------"
+echo ""
+
 echo "Setup"
 docker run -d --rm \
     --name porkbun-ddns \
@@ -20,5 +26,11 @@ echo "Test"
 inspec exec ./test/integration -t docker://porkbun-ddns
 echo "Teardown"
 docker container stop porkbun-ddns
+
+echo ""
+echo "--------------------------------------"
 echo "Docker e2e"
+echo "--------------------------------------"
+echo ""
+
 bash "${SCRIPT_DIR}/e2e.sh"
