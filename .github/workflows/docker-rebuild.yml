@@ -44,7 +44,7 @@ jobs:
         echo "build_matrix=$(cat .github/platforms.json)" >> $GITHUB_OUTPUT
 
   Build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platforms.runner }}
     needs: Setup
     strategy:
       fail-fast: false
@@ -68,7 +68,7 @@ jobs:
       env:
         DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         BUILD_NR: ${{ github.run_number }}
-        PLATFORM: ${{ matrix.platforms }}
+        PLATFORM: ${{ matrix.platforms.platform }}
         VERSION: ${{ needs.Setup.outputs.version }}
       run: |
         ARCH=$(echo "${PLATFORM}" | awk -F  "/" '{print $2$3}')
@@ -88,7 +88,7 @@ jobs:
       env:
         DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         BUILD_NR: ${{ github.run_number }}
-        PLATFORM: ${{ matrix.platforms }}
+        PLATFORM: ${{ matrix.platforms.platform }}
         VERSION: ${{ needs.Setup.outputs.version }}
       working-directory: './Docker'
       run: |
@@ -112,7 +112,7 @@ jobs:
       env:
         DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         BUILD_NR: ${{ github.run_number }}
-        PLATFORM: ${{ matrix.platforms }}
+        PLATFORM: ${{ matrix.platforms.platform }}
         VERSION: ${{ needs.Setup.outputs.version }}
       run: |
         ARCH=$(echo "${PLATFORM}" | awk -F  "/" '{print $2$3}')
@@ -158,13 +158,13 @@ jobs:
         while read -r PLATFORM; do
           ARCH=$(echo "${PLATFORM}" | awk -F  "/" '{print $2$3}')
           echo -n " ${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" >> push-shared-tags.sh
-        done <<< "$(cat .github/platforms.json | jq -r '.platforms | join("\n")')"
+        done <<< "$(cat .github/platforms.json | jq -r '.platforms[] | .platform')"
         echo "" >> push-shared-tags.sh
         echo -n "docker manifest create ${DOCKER_USER}/porkbun-ddns:latest" >> push-shared-tags.sh
         while read -r PLATFORM; do
           ARCH=$(echo "${PLATFORM}" | awk -F  "/" '{print $2$3}')
           echo -n " ${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}" >> push-shared-tags.sh
-        done <<< "$(cat .github/platforms.json | jq -r '.platforms | join("\n")')"
+        done <<< "$(cat .github/platforms.json | jq -r '.platforms[] | .platform')"
         echo "" >> push-shared-tags.sh
         echo "docker manifest push ${DOCKER_USER}/porkbun-ddns:${VERSION}" >> push-shared-tags.sh
         echo "docker manifest push ${DOCKER_USER}/porkbun-ddns:latest" >> push-shared-tags.sh

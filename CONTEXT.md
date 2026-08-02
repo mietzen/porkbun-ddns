@@ -11,12 +11,16 @@ DNS records, only updating when IPs change.
   API or real DNS records.
   _Avoid_: integration test, smoke test
 
+- **container e2e test**: A test that runs the real Docker image (with its real entrypoint) against the mock running as a sidecar container, verifying env-var wiring (e.g. `API_ENDPOINT`) end-to-end. Runs in docker.yml via `Docker/test/e2e.sh` on the native-runner platforms.
+
 - **smoke test**: A manual live-API harness (`local_test.py`, gitignored)
   that exercises real DNS records on a real domain with real API keys.
   _Avoid_: e2e test
 
 - **mock**: The hand-written fake of the Porkbun JSON API v3 used by e2e
-  tests, covering only the DNS endpoints the client calls.
+  tests, covering only the DNS endpoints the client calls. It also runs
+  standalone as a docker sidecar (via a `__main__` block) for the container
+  e2e test.
 
 - **fault injection**: The mock's `fail_next` counter, which makes the next N
   requests return HTTP 500 so the client's retry logic can be tested

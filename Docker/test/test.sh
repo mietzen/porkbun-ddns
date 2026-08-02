@@ -20,3 +20,5 @@ echo "Test"
 inspec exec ./test/integration -t docker://porkbun-ddns
 echo "Teardown"
 docker container stop porkbun-ddns
+echo "Docker e2e"
+bash "${SCRIPT_DIR}/e2e.sh"

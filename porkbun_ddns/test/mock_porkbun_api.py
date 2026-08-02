@@ -52,13 +52,21 @@ class PorkbunAPIMock:
         host, port = self._server.server_address[:2]
         return f"http://{host}:{port}"
 
-    def start(self) -> PorkbunAPIMock:
-        """Bind an ephemeral port and serve requests on a daemon thread."""
-        self._server = ThreadingHTTPServer(("127.0.0.1", 0), _make_handler(self))
+    def start(self, host: str = "127.0.0.1", port: int = 0) -> PorkbunAPIMock:
+        """Bind a host/port (ephemeral by default) and serve on a daemon thread."""
+        self._server = ThreadingHTTPServer((host, port), _make_handler(self))
         self._thread = threading.Thread(
             target=self._server.serve_forever, daemon=True)
         self._thread.start()
         return self
+
+    def serve_forever(self) -> None:
+        """Serve requests on the current thread until ``stop`` is called.
+
+        Blocking; used by the standalone ``__main__`` runner (docker sidecar).
+        """
+        if self._server:
+            self._server.serve_forever()
 
     def stop(self) -> None:
         """Shut the server down and free the port."""
@@ -164,3 +172,21 @@ class PorkbunAPIMock:
         handler.send_header("Content-Length", str(len(body_bytes)))
         handler.end_headers()
         handler.wfile.write(body_bytes)
+
+
+if __name__ == "__main__":
+    import os
+
+    mock = PorkbunAPIMock(
+        apikey=os.getenv("APIKEY", "test-apikey"),
+        secretapikey=os.getenv("SECRETAPIKEY", "test-secret"),
+    )
+    mock.start(
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", "8000")),
+    )
+    print(f"Mock Porkbun API listening on {mock.url}", flush=True)
+    try:
+        mock.serve_forever()
+    except KeyboardInterrupt:
+        mock.stop()
