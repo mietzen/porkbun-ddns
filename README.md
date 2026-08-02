@@ -82,6 +82,8 @@ These parameter are required for each run of the program. The program will take 
 2. The environment-variables (`export PORKBUN_APIKEY='pk1_xxx'`)
 3. The config-file (`apikey="pk_xxx"`)
 
+In Docker use the `API_ENDPOINT` environment-variable instead.
+
 So if a value is set through the CLI and in the file, the CLI-value will be used. This allows for a default-configuration in the config-file, whose settings can be selectively overridden through enviromnment-variables or CLI-arguments.
 
 ### The parameter *retry_count*, *retry_delay*
@@ -184,6 +186,7 @@ services:
       SUBDOMAINS: "my_subdomain,my_other_subdomain,my_subsubdomain.my_subdomain" # Subdomains comma spreaded
       SECRETAPIKEY: "<YOUR-SECRETAPIKEY>" # Your Porkbun Secret-API-Key
       APIKEY: "<YOUR-APIKEY>" # Your Porkbun API-Key
+      # API_ENDPOINT: "https://api.porkbun.com/api/json/v3" # Override the Porkbun API endpoint (e.g. a mirror/proxy)
       # PUBLIC_IPS: "1.2.3.4,2001:043e::1" # Set if you got static IP's
       # FRITZBOX: "192.168.178.1" # Use Fritz!BOX to obtain Public IP's
       # SLEEP: "300" # Seconds to sleep between DynDNS runs
