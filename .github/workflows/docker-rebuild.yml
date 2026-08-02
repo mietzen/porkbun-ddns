@@ -41,7 +41,11 @@ jobs:
           exit 1
         fi
         echo "version=$(echo ${VERSION})" >> $GITHUB_OUTPUT
-        echo "build_matrix=$(cat .github/platforms.json)" >> $GITHUB_OUTPUT
+        {
+          echo "build_matrix<<EOF"
+          cat .github/platforms.json
+          echo "EOF"
+        } >> $GITHUB_OUTPUT
 
   Build:
     runs-on: ${{ matrix.platforms.runner }}
