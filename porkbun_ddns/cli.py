@@ -4,7 +4,11 @@ import sys
 import traceback
 
 from porkbun_ddns import PorkbunDDNS
-from porkbun_ddns.config import extract_config, get_config_file_default, create_default_config_file
+from porkbun_ddns.config import (
+    create_default_config_file,
+    extract_config,
+    get_config_file_default,
+)
 from porkbun_ddns.errors import PorkbunDDNS_Error
 
 logger = logging.getLogger("porkbun_ddns")
@@ -57,7 +61,7 @@ def main(argv=sys.argv[1:]):
 
     if not argv:
         parser.print_help()
-        exit(1)
+        sys.exit(1)
     try:
         args = parser.parse_args(argv)
 
@@ -89,12 +93,12 @@ def main(argv=sys.argv[1:]):
             porkbun_ddns.update_records()
     except PorkbunDDNS_Error as e:
         logger.error("Error: " + str(e))
-        exit(1)
-    except Exception as e:
+        sys.exit(1)
+    except Exception as e:  # noqa: BLE001 - CLI entry point, catch-all is intentional
         logger.error("This shouldn't have happened!")
         logger.error("Error: " + str(e))
         logger.error(traceback.format_exc())
-        exit(1)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

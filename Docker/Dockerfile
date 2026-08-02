@@ -1,4 +1,4 @@
-FROM python:3.14.4-slim
+FROM python:3.14.6-slim
 
 ARG PORKBUN_DDNS_VERSION=0.0.0
 
