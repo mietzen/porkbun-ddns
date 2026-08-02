@@ -13,6 +13,10 @@ logger = logging.getLogger("porkbun_ddns")
 
 DEFAULT_ENDPOINT: Final = "https://api.porkbun.com/api/json/v3"
 
+#: Config fields that are used for webhook delivery only and must never be
+#: sent to the Porkbun API as part of a request body.
+WEBHOOK_CONFIG_FIELDS: Final = ("webhook_url", "webhook_template", "webhook_template_file")
+
 config_file_default_content: Final = \
     f"""
 {{
@@ -54,6 +58,9 @@ class Config(NamedTuple):
     endpoint: str
     apikey: str
     secretapikey: str
+    webhook_url: str = ""
+    webhook_template: str = ""
+    webhook_template_file: str = ""
 
 
 class _Config:
@@ -85,6 +92,8 @@ class _Config:
             return str(param)
         if self.config_file_content and (param := self.config_file_content.get(option_name, None)):
             return str(param)
+        if option_name in Config._field_defaults:
+            return Config._field_defaults[option_name]
         raise PorkbunDDNS_Error(
             f"'{option_name}' is not defined via CLI-arguments,"
             f" as an environment-variable"

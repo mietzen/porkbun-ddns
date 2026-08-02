@@ -1,1 +1,2 @@
 xdg-base-dirs~=6.0.2
+jinja2

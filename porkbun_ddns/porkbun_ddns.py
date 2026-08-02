@@ -6,7 +6,7 @@ import urllib.request
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from urllib.error import HTTPError, URLError
 
-from porkbun_ddns.config import Config
+from porkbun_ddns.config import WEBHOOK_CONFIG_FIELDS, Config
 from porkbun_ddns.errors import PorkbunDDNS_Error
 from porkbun_ddns.helpers import get_ips_from_fritzbox
 
@@ -27,7 +27,8 @@ class PorkbunDDNS:
             ipv6: bool = True,
     ) -> None:
 
-        self.config = config._asdict()
+        self.config = {key: value for key, value in config._asdict().items()
+                       if key not in WEBHOOK_CONFIG_FIELDS}
         self.static_ips = public_ips
         self.domain = domain.lower()
         self.records = None
@@ -36,6 +37,7 @@ class PorkbunDDNS:
         self.ipv6 = ipv6
         self.fqdn = self.domain
         self.subdomain = "@"
+        self.changes: list = []
 
     def set_subdomain(self, subdomain: str) -> None:
         self.subdomain = subdomain.lower()
@@ -146,18 +148,21 @@ class PorkbunDDNS:
                                 {"name": self.fqdn, "type": record_type, "content": str(ip.exploded)})))
                             self._delete_record(i["id"])
                             self._create_records(ip, record_type)
+                            self._record_change(record_type, i["content"], ip.exploded)
                         # Update existing entry
                         if i["type"] == record_type and i["content"] != ip.exploded:
                             logger.debug("Update existing entry, with:\n{}".format(json.dumps(
                                 {"name": self.fqdn, "type": record_type, "content": str(ip.exploded)})))
                             self._delete_record(i["id"])
                             self._create_records(ip, record_type)
+                            self._record_change(record_type, i["content"], ip.exploded)
                         # Create missing A or AAAA entry
                         if i["type"] in ["A", "AAAA"] and record_type not in [x["type"] for x in self.records if
                                                                               x["name"] == self.fqdn]:
                             logger.debug("Create missing A or AAAA entry, with:\n{}".format(json.dumps(
                                 {"name": self.fqdn, "type": record_type, "content": str(ip.exploded)})))
                             self._create_records(ip, record_type)
+                            self._record_change(record_type, None, ip.exploded)
                             # Update records
                             self.records = self.get_records()
                         # Everything is up to date
@@ -169,8 +174,19 @@ class PorkbunDDNS:
                     {"name": self.fqdn, "type": record_type, "content": str(ip.exploded)})))
                 # Create new record
                 self._create_records(ip, record_type)
+                self._record_change(record_type, None, ip.exploded)
                 # Update records
                 self.records = self.get_records()
+
+    def _record_change(self, record_type: str, old_ip: str | None, new_ip: str) -> None:
+        """Record a DNS change for the aggregated webhook changelog.
+        """
+        self.changes.append({
+            "record_type": record_type,
+            "fqdn": self.fqdn,
+            "old_ip": old_ip,
+            "new_ip": new_ip,
+        })
 
     def delete_records(self):
             """Delete A and AAAA DNS record for set record.
