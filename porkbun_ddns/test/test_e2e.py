@@ -7,13 +7,14 @@ No real network traffic: the client talks to :class:`PorkbunAPIMock` on
 from __future__ import annotations
 
 import json
+import logging
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from ipaddress import IPv6Address
 
 import pytest
 
-from porkbun_ddns import PorkbunDDNS
+from porkbun_ddns import PorkbunDDNS, cli
 from porkbun_ddns.config import Config
 from porkbun_ddns.errors import PorkbunDDNS_Error
 from porkbun_ddns.test.mock_porkbun_api import PorkbunAPIMock
@@ -242,3 +243,60 @@ def test_no_webhook_when_no_changes(mock_api, webhook_capture):
     assert second.changes == []
     assert not fire_webhook(config, second.changes, second.domain)
     assert len(webhook_capture.bodies) == 1
+
+
+def test_cli_retry_flags_recover_after_transient_failures(mock_api, caplog):
+    mock_api.fail_next = 2
+    caplog.set_level(logging.WARNING)
+    cli.main([
+        "example.com", "--env_only",
+        "--endpoint", f"{mock_api.url}/api/json/v3",
+        "--apikey", "test-apikey",
+        "--secretapikey", "test-secret",
+        "--public-ips", "203.0.113.5",
+        "--ipv4-only",
+        "--retry-count", "3",
+        "--retry-delay", "0",
+    ])
+    # 3 retrieve attempts (2 x 500 + success), create, post-create retrieve.
+    assert mock_api.request_count == 5
+    assert mock_api.records["example.com"][0]["content"] == "203.0.113.5"
+    assert "Retrying in 0 seconds (attempt 1/3)" in caplog.text
+    assert "Retrying in 0 seconds (attempt 2/3)" in caplog.text
+
+
+def test_cli_env_vars_plumb_retry_settings(mock_api, monkeypatch, caplog):
+    monkeypatch.setenv("PORKBUN_ENDPOINT", f"{mock_api.url}/api/json/v3")
+    monkeypatch.setenv("PORKBUN_APIKEY", "test-apikey")
+    monkeypatch.setenv("PORKBUN_SECRETAPIKEY", "test-secret")
+    monkeypatch.setenv("PORKBUN_RETRY_COUNT", "3")
+    monkeypatch.setenv("PORKBUN_RETRY_DELAY", "0")
+    mock_api.fail_next = 1
+    caplog.set_level(logging.WARNING)
+    cli.main([
+        "example.com", "--env_only",
+        "--public-ips", "203.0.113.5",
+        "--ipv4-only",
+    ])
+    assert mock_api.records["example.com"][0]["content"] == "203.0.113.5"
+    assert "attempt 1/3" in caplog.text
+
+
+def test_cli_retry_exhausted_exits_nonzero(mock_api, caplog):
+    mock_api.fail_next = 5
+    caplog.set_level(logging.WARNING)
+    with pytest.raises(SystemExit) as exc:
+        cli.main([
+            "example.com", "--env_only",
+            "--endpoint", f"{mock_api.url}/api/json/v3",
+            "--apikey", "test-apikey",
+            "--secretapikey", "test-secret",
+            "--public-ips", "203.0.113.5",
+            "--ipv4-only",
+            "--retry-count", "2",
+            "--retry-delay", "0",
+        ])
+    assert exc.value.code == 1
+    assert mock_api.request_count == 2
+    assert "attempt 1/2" in caplog.text
+    assert "Error reaching" in caplog.text

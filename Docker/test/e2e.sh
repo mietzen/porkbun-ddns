@@ -230,4 +230,39 @@ if grep -qE "INFO|DEBUG" <<< "${LOG5B}"; then
     fail "scenario 5: INFO/DEBUG lines present with LOG_LEVEL=WARNING"
 fi
 
-echo "Docker e2e PASSED: ${IMAGE} (ip-change, ipv6, validation, subdomains, log-levels)"
+echo "Docker e2e - scenario 6: RETRY_COUNT and RETRY_DELAY drive the retry loop"
+
+stop_app
+
+# Point at a closed port on the mock so every attempt fails fast with a
+# connection error; the container must retry RETRY_COUNT times, sleeping
+# RETRY_DELAY seconds between attempts, then exit non-zero.
+START=$(date +%s)
+if docker run --rm --name ${APP_CONTAINER} \
+    --platform ${PLATFORM} \
+    --network ${NETWORK} \
+    -e DOMAIN=example.com \
+    -e APIKEY=${APIKEY} \
+    -e SECRETAPIKEY=${SECRETAPIKEY} \
+    -e API_ENDPOINT="http://${MOCK_CONTAINER}:8001/api/json/v3" \
+    -e PUBLIC_IPS=${PINNED_IP} \
+    -e IPV6=FALSE \
+    -e RETRY_COUNT=3 \
+    -e RETRY_DELAY=1 \
+    "${IMAGE}" > "${LOG_DIR}/retry.log" 2>&1; then
+    fail "scenario 6: container should exit non-zero after exhausting retries"
+fi
+END=$(date +%s)
+
+grep -q "attempt 1/3" "${LOG_DIR}/retry.log" \
+    || fail "scenario 6: missing 'attempt 1/3' retry log line"
+grep -q "attempt 2/3" "${LOG_DIR}/retry.log" \
+    || fail "scenario 6: missing 'attempt 2/3' retry log line"
+grep -q "Error reaching" "${LOG_DIR}/retry.log" \
+    || fail "scenario 6: missing connection error in log"
+
+ELAPSED=$((END - START))
+[[ ${ELAPSED} -ge 2 ]] \
+    || fail "scenario 6: expected >=2s wall time for RETRY_DELAY=1 x 2 sleeps, got ${ELAPSED}s"
+
+echo "Docker e2e PASSED: ${IMAGE} (ip-change, ipv6, validation, subdomains, log-levels, retry)"
