@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [[ ${{ runner.debug }} == 1 ]]; then
+if [[ $CI_DEBUG_MODE == 1 ]]; then
     set -x
 fi
 

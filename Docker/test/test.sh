@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
-if [[ ${{ runner.debug }} == 1 ]]; then
+APT_SILENT='-qq -o=Dpkg::Use-Pty=0'
+
+if [[ $CI_DEBUG_MODE == 1 ]]; then
     set -x
+    APT_SILENT=''
 fi
 
 set -eo pipefail
@@ -23,8 +26,8 @@ docker run -d --rm \
     "${DOCKER_USER}/porkbun-ddns:${VERSION}-${ARCH}-${BUILD_NR}"
 
 # Install tools needed for inspect
-docker exec -u 0 porkbun-ddns apt-get update
-docker exec -u 0 porkbun-ddns apt-get install procps -y
+docker exec -u 0 porkbun-ddns apt-get update 
+docker exec -u 0 porkbun-ddns apt-get install procps -y $APT_SILENT
 
 echo "Test"
 inspec exec ./test/integration -t docker://porkbun-ddns

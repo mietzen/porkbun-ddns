@@ -90,6 +90,7 @@ jobs:
         BUILD_NR: ${{ github.run_number }}
         PLATFORM: ${{ matrix.platforms.platform }}
         VERSION: ${{ needs.Setup.outputs.version }}
+        CI_DEBUG_MODE: ${{ runner.debug }}
       working-directory: './Docker'
       run: |
         set -a
