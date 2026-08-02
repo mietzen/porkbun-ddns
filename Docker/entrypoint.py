@@ -4,6 +4,7 @@ import logging
 from time import sleep
 from porkbun_ddns import PorkbunDDNS
 from porkbun_ddns.config import Config, DEFAULT_ENDPOINT
+from porkbun_ddns.errors import PorkbunDDNS_Error
 from porkbun_ddns.helpers import parse_log_level
 from porkbun_ddns.webhook import fire_webhook
 
