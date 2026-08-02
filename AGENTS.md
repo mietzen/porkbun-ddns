@@ -42,7 +42,8 @@ Docker/
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `lint_and_test.yml` | PR to main | pytest across Python 3.10-3.14 + ruff linting |
-| `auto-merge-dependabot.yml` | PR opened (dependabot) | Auto-merge dependabot PRs via GitHub App token |
+| `auto-merge-dependabot.yml` | Schedule (every 6h) + manual | Enables auto-merge via GitHub App token. 14-day cooldown for python PRs (requirements.txt / pyproject.toml / setup.py); docker and github-actions PRs auto-merge on next schedule tick |
+| `auto-release.yml` | Merged dependabot python PR | Patch-bumps version and creates a new GitHub release |
 | `docker-rebuild.yml` | Merged dependabot docker PR / workflow_dispatch | Rebuild Docker images at current version (no new release) |
 | `docker.yml` | GitHub release published / PR | Build multi-arch Docker images, push to Docker Hub on release |
 | `pypi.yml` | GitHub release published | Build wheel, publish to PyPI (trusted publisher) |
@@ -57,12 +58,18 @@ Watches three ecosystems:
 
 ### Release Process
 
+**Python dependabot bumps** (automated):
+1. Dependabot opens PR for Python dependency update
+2. `lint_and_test.yml` runs PR checks
+3. `auto-merge-dependabot.yml` waits for the PR to be at least 14 days old, then enables auto-merge (supply-chain defense)
+4. On merge, `auto-release.yml` patch-bumps the version (e.g. `v1.1.27` → `v1.1.28`) and creates a GitHub release
+5. `pypi.yml` publishes the new wheel to PyPI, `docker.yml` builds multi-arch Docker images with the new version tags
+
 **Docker dependabot bumps** (automated):
 1. Dependabot opens PR for Docker base image update
-2. `auto-merge-dependabot.yml` enables auto-merge
-3. `lint_and_test.yml` runs PR checks
-4. On merge, `docker-rebuild.yml` rebuilds Docker images at current version
-5. Overwrites existing version tags and `latest` — no new release, no PyPI publish
+2. `auto-merge-dependabot.yml` enables auto-merge on the next schedule tick
+3. On merge, `docker-rebuild.yml` rebuilds Docker images at current version
+4. Overwrites existing version tags and `latest` — no new release, no PyPI publish
 
 **New feature/bugfix release** (manual):
 1. Developer creates GitHub release with `vX.Y.Z` tag
