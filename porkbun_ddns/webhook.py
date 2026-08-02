@@ -5,9 +5,14 @@ from __future__ import annotations
 import logging
 import urllib.request
 from collections.abc import Sequence
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+try:  # datetime.UTC is Python 3.11+; keep 3.10 support
+    from datetime import UTC
+except ImportError:  # pragma: no cover - 3.10 fallback
+    from datetime import timezone as UTC
 
 import jinja2
 
@@ -34,7 +39,7 @@ def _webhook_context(changes: Sequence[dict[str, Any]],
         "old_ips": old_ips,
         "new_ips": new_ips,
         "domain": domain,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
