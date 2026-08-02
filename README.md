@@ -36,7 +36,7 @@ pip install porkbun-ddns
 ## Usage
 
 ```Shell
-usage: porkbun-ddns [-h] [-c CONFIG] [-e ENDPOINT] [-pk APIKEY] [-sk SECRETAPIKEY] [-i [PUBLIC_IPS ...]] [-f FRITZBOX] [-4 | -6] [-v] [--env_only] domain [subdomains ...]
+usage: porkbun-ddns [-h] [-c CONFIG] [-e ENDPOINT] [-pk APIKEY] [-sk SECRETAPIKEY] [--retry-count RETRY_COUNT] [--retry-delay RETRY_DELAY] [--webhook-url WEBHOOK_URL] [--webhook-template WEBHOOK_TEMPLATE] [--webhook-template-file WEBHOOK_TEMPLATE_FILE] [--log-level LOG_LEVEL] [-i [PUBLIC_IPS ...]] [-f FRITZBOX] [-4 | -6] [-v] [--env_only] domain [subdomains ...]
 
 positional arguments:
   domain                Domain to be updated
@@ -52,6 +52,18 @@ options:
                         The Porkbun-API-key
   -sk SECRETAPIKEY, --secretapikey SECRETAPIKEY
                         The secret API-key
+  --retry-count RETRY_COUNT
+                        Number of attempts for transient API failures (default: 3)
+  --retry-delay RETRY_DELAY
+                        Seconds to wait between retry attempts (default: 5)
+  --webhook-url WEBHOOK_URL
+                        Webhook URL to notify when IPs change
+  --webhook-template WEBHOOK_TEMPLATE
+                        Jinja2 template for the webhook payload
+  --webhook-template-file WEBHOOK_TEMPLATE_FILE
+                        Path to a file containing the Jinja2 webhook template (takes precedence over --webhook-template)
+  --log-level LOG_LEVEL
+                        Set log verbosity (DEBUG, INFO, WARNING, ERROR, CRITICAL)
   -i [PUBLIC_IPS ...], --public-ips [PUBLIC_IPS ...]
                         Public IPs (v4 and or v6)
   -f FRITZBOX, --fritzbox FRITZBOX
@@ -71,6 +83,44 @@ These parameter are required for each run of the program. The program will take 
 3. The config-file (`apikey="pk_xxx"`)
 
 So if a value is set through the CLI and in the file, the CLI-value will be used. This allows for a default-configuration in the config-file, whose settings can be selectively overridden through enviromnment-variables or CLI-arguments.
+
+### The parameter *retry_count*, *retry_delay*
+
+Transient API failures (unreachable endpoint, timeouts, HTTP 5xx) are retried automatically, HTTP 4xx errors (e.g. invalid API keys) fail immediately. Default is 3 attempts with a 5 seconds delay between them.
+
+The program will take the values for these (in this order) from:
+
+1. The command-line-arguments (`--retry-count 3`)
+2. The environment-variables (`export PORKBUN_RETRY_COUNT='3'`)
+3. The config-file (`retry_count="3"`)
+
+### The parameter *webhook_url*, *webhook_template*, *webhook_template_file*
+
+When the IP(s) of your records change, an aggregated webhook-notification can be POSTed to a URL of your choice. This works out of the box with Slack, MS Teams, Mattermost and Google Chat.
+
+The program will take the values for these (in this order) from:
+
+1. The command-line-arguments (`--webhook-url 'https://...'`)
+2. The environment-variables (`export PORKBUN_WEBHOOK_URL='https://...'`)
+3. The config-file (`webhook_url="https://..."`)
+
+In Docker use the `WEBHOOK_URL`, `WEBHOOK_TEMPLATE` and `WEBHOOK_TEMPLATE_FILE` environment-variables instead.
+
+The payload can be customized with an inline Jinja2-template (`--webhook-template`) or a template-file (`--webhook-template-file`), where the file takes precedence over the inline one. If neither is set, the following Slack-compatible default is used:
+
+```json
+{"text": "IP changed: {{ old_ips | join(', ') }} -> {{ new_ips | join(', ') }} ({{ domain }})"}
+```
+
+The following context-variables are available in templates: `changes` (list of changes, each `{record_type, fqdn, old_ip|None, new_ip}`), `old_ips` (previous IPs), `new_ips` (new IPs), `domain` (the updated domain) and `timestamp` (ISO-8601 UTC timestamp of the notification).
+
+One notification is sent per run, after all records have been updated. Notifications are fire-and-forget: a failure to deliver never crashes the update-loop.
+
+### The parameter *log_level*
+
+Controls the verbosity of the logs. Accepts standard logging level names, case-insensitively: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` (default `INFO`). Set it via `--log-level WARNING` on the CLI or `LOG_LEVEL=WARNING` in Docker.
+
+When both the legacy `--verbose`/`DEBUG` and `LOG_LEVEL` are set, `LOG_LEVEL` wins. An invalid value logs a warning and falls back to `INFO`, it never crashes.
 
 ### Examples
 
@@ -115,7 +165,10 @@ You can set up a cron job get the full path to porkbun-ddns with `which porkbun-
 {
   "endpoint":"https://api.porkbun.com/api/json/v3",
   "apikey": "pk1_xxx",
-  "secretapikey": "sk1_xxx"
+  "secretapikey": "sk1_xxx",
+  "retry_count": "3",
+  "retry_delay": "5",
+  "webhook_url": "https://hooks.slack.com/services/..."
 }
 ```
 
@@ -137,6 +190,12 @@ services:
       # IPV4: "TRUE" # Set IPv4 address
       # IPV6: "TRUE" # Set IPv6 address
       # DEBUG: "FALSE" # DEBUG LOGGING
+      # LOG_LEVEL: "WARNING" # Set log verbosity (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+      # RETRY_COUNT: "3" # Number of attempts for transient API failures
+      # RETRY_DELAY: "5" # Seconds to wait between retry attempts
+      # WEBHOOK_URL: "https://hooks.slack.com/services/..." # POST an IP-change notification to this URL (Slack, MS Teams, Mattermost, Google Chat compatible by default)
+      # WEBHOOK_TEMPLATE: '{"text": "IP changed: {{ old_ips | join(", ") }} -> {{ new_ips | join(", ") }} ({{ domain }})"}' # Optional custom Jinja2 template
+      # WEBHOOK_TEMPLATE_FILE: "/path/to/template.j2" # Optional Jinja2 template file (takes precedence over WEBHOOK_TEMPLATE)
     restart: unless-stopped
 
 # # Uncomment below to let it detect ipv6 address:
@@ -157,6 +216,8 @@ docker run -d \
   -e SUBDOMAINS="my_subdomain,my_other_subdomain,my_subsubdomain.my_subdomain" \
   -e SECRETAPIKEY="<YOUR-SECRETAPIKEY>" \
   -e APIKEY="<YOUR-APIKEY>" \
+  -e LOG_LEVEL="WARNING" \
+  -e WEBHOOK_URL="https://hooks.slack.com/services/..." \
   --name porkbun-ddns \
   --restart unless-stopped \
   mietzen/porkbun-ddns:latest
