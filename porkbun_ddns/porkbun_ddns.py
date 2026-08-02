@@ -42,7 +42,7 @@ class PorkbunDDNS:
         if self.subdomain == "@":
             self.fqdn = self.domain
         else:
-            self.fqdn = ".".join([self.subdomain, self.domain])
+            self.fqdn = f"{self.subdomain}.{self.domain}"
 
     def get_public_ips(self) -> list:
         """Retrieve the public IP addresses of the network.
@@ -192,8 +192,11 @@ class PorkbunDDNS:
         """Delete a DNS record with the given domain ID.
         """
         if self.records:
-            type, name, content = [(x["type"], x["name"], x["content"])
-                                   for x in self.records if x["id"] == domain_id][0]
+            type, name, content = next(
+                (x["type"], x["name"], x["content"])
+                for x in self.records
+                if x["id"] == domain_id
+            )
             status = self._api("/dns/delete/" + self.domain + "/" + domain_id)
             logger.info("Deleting {}-Record for {} with content: {}, Status: {}".format(type,
                                                                                         name, content,

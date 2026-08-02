@@ -3,8 +3,8 @@ import unittest
 from unittest.mock import MagicMock, patch
 from urllib.error import URLError
 
-from porkbun_ddns.config import Config
 from porkbun_ddns import PorkbunDDNS
+from porkbun_ddns.config import Config
 from porkbun_ddns.errors import PorkbunDDNS_Error
 
 logger = logging.getLogger("porkbun_ddns")
@@ -21,7 +21,7 @@ ips = ["127.0.0.1", "::1"]
 
 
 def mock_api(status="SUCCESS", mock_records=None):
-    records = list()
+    records = []
     if mock_records:
         mock_id = 1111111111
         for record in mock_records:
@@ -86,14 +86,14 @@ class TestPorkbunDDNS(unittest.TestCase):
             porkbun_ddns.set_subdomain("@")
             porkbun_ddns.update_records()
             self.assertEqual(cm.output,
-                             ["INFO:porkbun_ddns:Deleting A-Record for my-domain.local with content: "
-                              "127.0.0.2, Status: SUCCESS",
-                              "INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
-                              "127.0.0.1, Status: SUCCESS",
-                              "INFO:porkbun_ddns:Deleting AAAA-Record for my-domain.local with content: "
-                              "0000:0000:0000:0000:0000:0000:0000:0002, Status: SUCCESS",
-                              "INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
-                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS"])
+                             [("INFO:porkbun_ddns:Deleting A-Record for my-domain.local with content: "
+                              "127.0.0.2, Status: SUCCESS"),
+                              ("INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
+                              "127.0.0.1, Status: SUCCESS"),
+                              ("INFO:porkbun_ddns:Deleting AAAA-Record for my-domain.local with content: "
+                              "0000:0000:0000:0000:0000:0000:0000:0002, Status: SUCCESS"),
+                              ("INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
+                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS")])
 
     @patch.object(PorkbunDDNS,
                   "_api",
@@ -104,10 +104,10 @@ class TestPorkbunDDNS(unittest.TestCase):
             porkbun_ddns.set_subdomain("@")
             porkbun_ddns.update_records()
             self.assertEqual(cm.output,
-                             ["INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
-                              "127.0.0.1, Status: SUCCESS",
-                              "INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
-                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS"])
+                             [("INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
+                              "127.0.0.1, Status: SUCCESS"),
+                              ("INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
+                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS")])
 
     @patch.object(PorkbunDDNS,
                   "_api",
@@ -130,22 +130,22 @@ class TestPorkbunDDNS(unittest.TestCase):
             porkbun_ddns.set_subdomain("@")
             porkbun_ddns.update_records()
             self.assertEqual(cm.output,
-                             ["INFO:porkbun_ddns:Deleting ALIAS-Record for my-domain.local with content: "
-                              "my-domain.lan, Status: SUCCESS",
-                              "INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
-                              "127.0.0.1, Status: SUCCESS",
-                              "INFO:porkbun_ddns:Deleting CNAME-Record for my-domain.local with content: "
-                              "my-domain.lan, Status: SUCCESS",
-                              "INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
-                              "127.0.0.1, Status: SUCCESS",
-                              "INFO:porkbun_ddns:Deleting ALIAS-Record for my-domain.local with content: "
-                              "my-domain.lan, Status: SUCCESS",
-                              "INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
-                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS",
-                              "INFO:porkbun_ddns:Deleting CNAME-Record for my-domain.local with content: "
-                              "my-domain.lan, Status: SUCCESS",
-                              "INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
-                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS"])
+                             [("INFO:porkbun_ddns:Deleting ALIAS-Record for my-domain.local with content: "
+                              "my-domain.lan, Status: SUCCESS"),
+                              ("INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
+                              "127.0.0.1, Status: SUCCESS"),
+                              ("INFO:porkbun_ddns:Deleting CNAME-Record for my-domain.local with content: "
+                              "my-domain.lan, Status: SUCCESS"),
+                              ("INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
+                              "127.0.0.1, Status: SUCCESS"),
+                              ("INFO:porkbun_ddns:Deleting ALIAS-Record for my-domain.local with content: "
+                              "my-domain.lan, Status: SUCCESS"),
+                              ("INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
+                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS"),
+                              ("INFO:porkbun_ddns:Deleting CNAME-Record for my-domain.local with content: "
+                              "my-domain.lan, Status: SUCCESS"),
+                              ("INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
+                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS")])
 
     @patch("urllib.request.urlopen")
     def test_urlopen_returns_500_ipv4(self, mock_urlopen):
