@@ -84,51 +84,43 @@ These parameter are required for each run of the program. The program will take 
 
 So if a value is set through the CLI and in the file, the CLI-value will be used. This allows for a default-configuration in the config-file, whose settings can be selectively overridden through enviromnment-variables or CLI-arguments.
 
-### The parameters *retry_count*, *retry_delay*
+### The parameter *retry_count*, *retry_delay*
 
-Transient API failures (unreachable endpoint, timeouts, HTTP 5xx) are retried automatically. HTTP 4xx errors (e.g. invalid API keys) are not retried and fail immediately.
+Transient API failures (unreachable endpoint, timeouts, HTTP 5xx) are retried automatically, HTTP 4xx errors (e.g. invalid API keys) fail immediately. Default is 3 attempts with a 5 seconds delay between them.
 
-- `retry_count`: number of attempts (default `3`)
-- `retry_delay`: seconds to wait between attempts (default `5`)
+The program will take the values for these (in this order) from:
 
-These are optional and can be set via CLI (`--retry-count`, `--retry-delay`), environment variables (`PORKBUN_RETRY_COUNT`, `PORKBUN_RETRY_DELAY`) or the config-file (`retry_count`, `retry_delay`).
+1. The command-line-arguments (`--retry-count 3`)
+2. The environment-variables (`export PORKBUN_RETRY_COUNT='3'`)
+3. The config-file (`retry_count="3"`)
 
-### The parameters *webhook_url*, *webhook_template*, *webhook_template_file*
+### The parameter *webhook_url*, *webhook_template*, *webhook_template_file*
 
-When the IP(s) of your records change, an aggregated webhook notification can be POSTed to a URL of your choice. This works out of the box with Slack, MS Teams, Mattermost and Google Chat.
+When the IP(s) of your records change, an aggregated webhook-notification can be POSTed to a URL of your choice. This works out of the box with Slack, MS Teams, Mattermost and Google Chat.
 
-- `webhook_url`: the URL to POST the notification to. Unset disables webhook notifications.
-- `webhook_template`: an inline [Jinja2](https://jinja.palletsprojects.com/) template for the payload.
-- `webhook_template_file`: path to a file containing a Jinja2 template. Takes precedence over `webhook_template`.
+The program will take the values for these (in this order) from:
 
-These are optional and can be set via CLI (`--webhook-url`, `--webhook-template`, `--webhook-template-file`), environment variables (`PORKBUN_WEBHOOK_URL`, `PORKBUN_WEBHOOK_TEMPLATE`, `PORKBUN_WEBHOOK_TEMPLATE_FILE`) or the config-file (`webhook_url`, `webhook_template`, `webhook_template_file`). In Docker they are set via `WEBHOOK_URL`, `WEBHOOK_TEMPLATE` and `WEBHOOK_TEMPLATE_FILE`.
+1. The command-line-arguments (`--webhook-url 'https://...'`)
+2. The environment-variables (`export PORKBUN_WEBHOOK_URL='https://...'`)
+3. The config-file (`webhook_url="https://..."`)
 
-Template precedence: **file > inline > built-in default**. The built-in default produces a Slack-compatible payload:
+In Docker use the `WEBHOOK_URL`, `WEBHOOK_TEMPLATE` and `WEBHOOK_TEMPLATE_FILE` environment-variables instead.
+
+The payload can be customized with an inline Jinja2-template (`--webhook-template`) or a template-file (`--webhook-template-file`), where the file takes precedence over the inline one. If neither is set, the following Slack-compatible default is used:
 
 ```json
 {"text": "IP changed: {{ old_ips | join(', ') }} -> {{ new_ips | join(', ') }} ({{ domain }})"}
 ```
 
-The following context variables are available in templates:
+The following context-variables are available in templates: `changes` (list of changes, each `{record_type, fqdn, old_ip|None, new_ip}`), `old_ips` (previous IPs), `new_ips` (new IPs), `domain` (the updated domain) and `timestamp` (ISO-8601 UTC timestamp of the notification).
 
-| Variable    | Description                                                                 |
-| ----------- | --------------------------------------------------------------------------- |
-| `changes`   | List of changes, each `{record_type, fqdn, old_ip\|None, new_ip}`            |
-| `old_ips`   | List of the previous IPs (only those that changed)                          |
-| `new_ips`   | List of the new IPs (only those that changed)                               |
-| `domain`    | The domain that was updated                                                 |
-| `timestamp` | ISO-8601 UTC timestamp of the notification                                  |
-
-One notification is sent per run, after all records have been updated. Notifications are fire-and-forget: a failure to deliver never crashes the update loop.
+One notification is sent per run, after all records have been updated. Notifications are fire-and-forget: a failure to deliver never crashes the update-loop.
 
 ### The parameter *log_level*
 
-Controls log verbosity. Accepts standard logging level names, case-insensitively: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` (default `INFO`).
+Controls the verbosity of the logs. Accepts standard logging level names, case-insensitively: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` (default `INFO`). Set it via `--log-level WARNING` on the CLI or `LOG_LEVEL=WARNING` in Docker.
 
-- CLI: `--log-level WARNING`
-- Docker: `LOG_LEVEL=WARNING`
-
-When both the legacy `--verbose`/`DEBUG` and `LOG_LEVEL` are set, `LOG_LEVEL` wins. An invalid value logs a warning and falls back to `INFO` — it never crashes.
+When both the legacy `--verbose`/`DEBUG` and `LOG_LEVEL` are set, `LOG_LEVEL` wins. An invalid value logs a warning and falls back to `INFO`, it never crashes.
 
 ### Examples
 
