@@ -10,6 +10,7 @@ from porkbun_ddns.config import (
     get_config_file_default,
 )
 from porkbun_ddns.errors import PorkbunDDNS_Error
+from porkbun_ddns.helpers import parse_log_level
 from porkbun_ddns.webhook import fire_webhook
 
 logger = logging.getLogger("porkbun_ddns")
@@ -44,6 +45,10 @@ def main(argv=sys.argv[1:]):
     parser.add_argument("--webhook-template-file",
                         help="Path to a file containing the Jinja2 webhook "
                              "template (takes precedence over --webhook-template)")
+
+    parser.add_argument("--log-level",
+                        help="Set log verbosity "
+                             "(DEBUG, INFO, WARNING, ERROR, CRITICAL)")
 
     subdomains = parser.add_mutually_exclusive_group()
     subdomains.add_argument("subdomains", nargs="*",
@@ -84,7 +89,11 @@ def main(argv=sys.argv[1:]):
             args.config = get_config_file_default()
             create_default_config_file()
 
-        if args.verbose:
+        if args.log_level:
+            logger.setLevel(parse_log_level(args.log_level))
+            for handler in logger.handlers:
+                handler.setLevel(logger.level)
+        elif args.verbose:
             logger.setLevel(logging.DEBUG)
             for handler in logger.handlers:
                 handler.setLevel(logging.DEBUG)

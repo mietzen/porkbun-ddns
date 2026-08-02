@@ -13,6 +13,7 @@ services:
       # IPV4: "TRUE" # Set IPv4 address
       # IPV6: "FALSE" # Set IPv6 address
       # DEBUG: "FALSE" # DEBUG LOGGING
+      # LOG_LEVEL: "WARNING" # Set log verbosity (DEBUG, INFO, WARNING, ERROR, CRITICAL)
       # WEBHOOK_URL: "https://hooks.slack.com/services/..." # POST an IP-change notification to this URL (Slack, MS Teams, Mattermost, Google Chat compatible by default)
       # WEBHOOK_TEMPLATE: '{"text": "IP changed: {{ old_ips | join(", ") }} -> {{ new_ips | join(", ") }} ({{ domain }})"}' # Optional custom Jinja2 template
       # WEBHOOK_TEMPLATE_FILE: "/path/to/template.j2" # Optional Jinja2 template file (takes precedence over WEBHOOK_TEMPLATE)

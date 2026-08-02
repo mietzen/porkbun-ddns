@@ -4,10 +4,14 @@ import logging
 from time import sleep
 from porkbun_ddns import PorkbunDDNS
 from porkbun_ddns.config import Config, DEFAULT_ENDPOINT
+from porkbun_ddns.helpers import parse_log_level
 from porkbun_ddns.webhook import fire_webhook
 
 logger = logging.getLogger('porkbun_ddns')
-if os.getenv('DEBUG', 'False').lower() in ('true', '1', 't'):
+log_level = os.getenv('LOG_LEVEL', None)
+if log_level:
+    logger.setLevel(parse_log_level(log_level))
+elif os.getenv('DEBUG', 'False').lower() in ('true', '1', 't'):
     logger.setLevel(logging.DEBUG)
 else:
     logger.setLevel(logging.INFO)
