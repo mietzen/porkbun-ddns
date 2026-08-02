@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-set -xe
+if [[ ${{ runner.debug }} == 1 ]]; then
+    set -x
+fi
+
+set -eo pipefail
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 

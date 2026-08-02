@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-set -x
+if [[ ${{ runner.debug }} == 1 ]]; then
+    set -x
+fi
+
+set -eo pipefail
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 REPO_ROOT=$( cd "${SCRIPT_DIR}/../.." &> /dev/null && pwd )
