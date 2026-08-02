@@ -7,8 +7,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from porkbun_ddns.config import Config, extract_config, load_config_file
-from porkbun_ddns.test.test_porkbun_ddns import valid_config
 from porkbun_ddns.errors import PorkbunDDNS_Error
+from porkbun_ddns.test.test_porkbun_ddns import valid_config
+
 
 def _mock(*names_contained: str, key_pref: str = "", val_pref: str = "") -> dict[str, str]:
     d = valid_config._asdict()
