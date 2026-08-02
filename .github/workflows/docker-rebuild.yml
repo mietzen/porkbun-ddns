@@ -1,15 +1,22 @@
-name: Build & Upload Docker Image
+name: "Docker Rebuild (Dependabot)"
 
 on:
   pull_request:
-  release:
-    types: [published]
+    types:
+      - closed
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build (e.g. 1.2.3). Defaults to latest release."
+        required: false
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   Setup:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && github.event.pull_request.user.login == 'dependabot[bot]' && contains(github.event.pull_request.labels.*.name, 'docker'))
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.set-matrix.outputs.version }}
@@ -22,19 +29,16 @@ jobs:
     - name: Setup Matrix-Jobs
       id: set-matrix
       env:
-        VERSION: ${{ github.ref_name }}
-        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        INPUT_VERSION: ${{ inputs.version }}
       run: |
-        echo "Run triggered by: ${GITHUB_EVENT_NAME}"
-        if grep -c -E '^v[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}$' <<< ${VERSION}; then
-          VERSION=$(sed 's/^.\{1\}//g' <<< ${VERSION})
+        if [[ -n "${INPUT_VERSION}" ]]; then
+          VERSION="${INPUT_VERSION}"
         else
-          if [[ ${GITHUB_EVENT_NAME} != 'pull_request' ]]; then
-            echo "This branch shouldn't be build: ${VERSION}"
-            exit 1
-          else
-            VERSION='0.0.0'
-          fi
+          VERSION=$(curl -s "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" | jq -r '.name' | sed 's/^v//')
+        fi
+        if ! grep -c -E '^[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}$' <<< "${VERSION}"; then
+          echo "Invalid version: ${VERSION}"
+          exit 1
         fi
         echo "version=$(echo ${VERSION})" >> $GITHUB_OUTPUT
         echo "build_matrix=$(cat .github/platforms.json)" >> $GITHUB_OUTPUT
@@ -99,14 +103,12 @@ jobs:
         echo ""
 
     - name: Login to Docker Hub
-      if: github.event_name == 'release'
       uses: docker/login-action@v4
       with:
         username: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         password: ${{ secrets.DOCKER_HUB_DEPLOY_KEY }}
 
     - name: Push Images
-      if: github.event_name == 'release'
       env:
         DOCKER_USER: ${{ vars.DOCKER_HUB_USERNAME || 'user' }}
         BUILD_NR: ${{ github.run_number }}
@@ -126,7 +128,6 @@ jobs:
         docker push "${DOCKER_USER}/porkbun-ddns:${ARCH}"
 
   Shared-Manifest:
-    if: github.event_name == 'release'
     runs-on: ubuntu-latest
     needs:
       - Build

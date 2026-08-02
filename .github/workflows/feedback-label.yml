@@ -12,32 +12,23 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !github.event.issue.pull_request }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
       - name: Determine commenter role
         id: determine-role
+        env:
+          AUTHOR: ${{ github.event.comment.author_association }}
+          ISSUE_STATE: ${{ github.event.issue.state }}
+          HAS_ENHANCEMENT_LABEL: ${{ contains(github.event.issue.labels.*.name, 'enhancement') }}
         run: |
-          AUTHOR="${{ github.event.comment.author_association }}"
           if [[ "$AUTHOR" == "OWNER" || "$AUTHOR" == "MEMBER" || "$AUTHOR" == "COLLABORATOR" ]]; then
-            echo "IS_MAINTAINER=true" >> $GITHUB_ENV
+            echo "IS_MAINTAINER=true" >> "$GITHUB_ENV"
           else
-            echo "IS_MAINTAINER=false" >> $GITHUB_ENV
+            echo "IS_MAINTAINER=false" >> "$GITHUB_ENV"
           fi
 
-          ISSUE_STATE="${{ github.event.issue.state }}"
-          HAS_ENHANCEMENT_LABEL=false
-          for label in "${{ toJson(github.event.issue.labels) }}" ; do
-            if [[ "$label" == *"enhancement"* ]]; then
-              HAS_ENHANCEMENT_LABEL=true
-              break
-            fi
-          done
-
           if [[ "$ISSUE_STATE" == "open" && "$HAS_ENHANCEMENT_LABEL" == "false" ]]; then
-            echo "IS_ELIGIBLE=true" >> $GITHUB_ENV
+            echo "IS_ELIGIBLE=true" >> "$GITHUB_ENV"
           else
-            echo "IS_ELIGIBLE=false" >> $GITHUB_ENV
+            echo "IS_ELIGIBLE=false" >> "$GITHUB_ENV"
           fi
 
       - name: Add 'feedback required' label

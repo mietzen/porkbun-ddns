@@ -1,10 +1,11 @@
-name: Auto-merge Dependabot
-on: 
-  pull_request:
-      types:
-        - opened
-      branches:
-        - 'main'
+name: Auto-merge Dependabot (aged for python)
+
+on:
+  schedule:
+    # Every 6 hours. Worst case: a 14-day-old PR waits up to 6h after hitting
+    # the threshold before this job runs and enables auto-merge.
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 permissions:
   pull-requests: write
@@ -13,15 +14,59 @@ permissions:
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
     steps:
       - uses: actions/create-github-app-token@v3
-        id: generate-token
+        id: token
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
-      - uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          token: ${{ steps.generate-token.outputs.token }}
-          pull-request-number: ${{ github.event.pull_request.number }}
-          merge-method: squash
+
+      - name: List open dependabot PRs
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --author app/dependabot \
+            --state open \
+            --json number,createdAt,title,files > prs.json
+          echo "::notice::Found $(jq 'length' prs.json) open dependabot PRs"
+
+      - name: Enable auto-merge (14d cooldown for python, immediate for others)
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          PYTHON_MIN_AGE_DAYS: '14'
+        run: |
+          NOW=$(date +%s)
+          SKIPPED=0
+          MERGED=0
+          FAILED=0
+
+          while read -r pr; do
+            number=$(echo "$pr" | jq -r .number)
+            title=$(echo "$pr" | jq -r .title)
+            created=$(echo "$pr" | jq -r .createdAt)
+            created_ts=$(date -d "$created" +%s)
+            age_days=$(( (NOW - created_ts) / 86400 ))
+
+            is_python=false
+            if echo "$pr" | jq -r '.files[].path' | grep -qE '^(requirements\.txt|pyproject\.toml|setup\.py)$'; then
+              is_python=true
+            fi
+
+            if [ "$is_python" = "true" ] && [ "$age_days" -lt "$PYTHON_MIN_AGE_DAYS" ]; then
+              echo "::notice title=Skip PR #$number::$title (python, ${age_days}d old, need ${PYTHON_MIN_AGE_DAYS}d)"
+              SKIPPED=$((SKIPPED + 1))
+              continue
+            fi
+
+            echo "::notice title=Auto-merge PR #$number::$title (${age_days}d old, python=${is_python})"
+            if gh pr merge "$number" --auto --squash --repo "$GITHUB_REPOSITORY"; then
+              MERGED=$((MERGED + 1))
+            else
+              echo "::warning title=PR #$number::gh pr merge failed (likely CI not green or merge conflict)"
+              FAILED=$((FAILED + 1))
+            fi
+          done < <(jq -c '.[]' prs.json)
+
+          echo "::notice title=Summary::skipped=$SKIPPED merged=$MERGED failed=$FAILED"
