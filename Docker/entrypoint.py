@@ -33,7 +33,7 @@ if os.getenv('PUBLIC_IPS', None):
 fritzbox = os.getenv('FRITZBOX', None)
 
 config = Config(
-    DEFAULT_ENDPOINT,
+    os.getenv('API_ENDPOINT', DEFAULT_ENDPOINT),
     os.getenv('APIKEY'),
     os.getenv('SECRETAPIKEY'),
     retry_count=os.getenv('RETRY_COUNT', '3'),

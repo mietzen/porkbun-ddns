@@ -107,7 +107,7 @@ Docker integration tests use cinc-auditor (inspec) and run automatically in CI. 
 - **CLI entry point:** `porkbun-ddns` → `porkbun_ddns.cli:main`
 - **Docker entry point:** `/entrypoint.py` — all config via environment variables:
   - Required: `DOMAIN`, `APIKEY`, `SECRETAPIKEY`
-  - Optional: `SUBDOMAINS`, `PUBLIC_IPS`, `FRITZBOX`, `IPV4`, `IPV6`, `SLEEP`, `DEBUG`, `LOG_LEVEL`, `RETRY_COUNT`, `RETRY_DELAY`, `WEBHOOK_URL`, `WEBHOOK_TEMPLATE`, `WEBHOOK_TEMPLATE_FILE`
+  - Optional: `SUBDOMAINS`, `PUBLIC_IPS`, `FRITZBOX`, `IPV4`, `IPV6`, `SLEEP`, `DEBUG`, `LOG_LEVEL`, `RETRY_COUNT`, `RETRY_DELAY`, `WEBHOOK_URL`, `WEBHOOK_TEMPLATE`, `WEBHOOK_TEMPLATE_FILE`, `API_ENDPOINT`
 - **Multi-arch builds:** Platform list in `.github/platforms.json`, not hardcoded in workflows
 - **Secrets:** GitHub App token (APP_ID + APP_PRIVATE_KEY) for CI automation, Docker Hub credentials for image publishing, PyPI trusted publisher (no token needed)
 
