@@ -124,6 +124,9 @@ class PorkbunDDNS:
             if action.replacing_id is not None:
                 old = next(
                     r for r in records if r["id"] == action.replacing_id)
+                logger.debug("Update existing entry, with:\n%s", json.dumps(
+                    {"name": self.fqdn, "type": action.record_type,
+                     "content": action.content}))
                 status = self.client.delete_record(
                     self.domain, action.replacing_id)
                 logger.info(
@@ -138,6 +141,9 @@ class PorkbunDDNS:
                 self._record_change(
                     action.record_type, old["content"], action.content)
             else:
+                logger.debug("Create new record, with:\n%s", json.dumps(
+                    {"name": self.fqdn, "type": action.record_type,
+                     "content": action.content}))
                 status = self.client.create_record(
                     self.domain, self.subdomain,
                     action.record_type, action.content)
