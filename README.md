@@ -197,7 +197,7 @@ services:
       APIKEY: "<YOUR-APIKEY>" # Your Porkbun API-Key
       # API_ENDPOINT: "https://api.porkbun.com/api/json/v3" # Override the Porkbun API endpoint (e.g. a mirror/proxy)
       # PUBLIC_IPS: "1.2.3.4,2001:043e::1" # Set if you got static IP's (wins over FRITZBOX)
-      # FRITZBOX: "192.168.178.1" # Use Fritz!BOX to obtain Public IP's (via fritzbox-ips sidecar subprocess)
+      # FRITZBOX: "192.168.178.1" # Use Fritz!BOX to obtain Public IP's (queried directly by the entrypoint)
       # SLEEP: "300" # Seconds to sleep between DynDNS runs
       # IPV4: "TRUE" # Set IPv4 address
       # IPV6: "TRUE" # Set IPv6 address

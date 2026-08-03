@@ -149,12 +149,6 @@ class TestPorkbunDDNS(unittest.TestCase):
                               "my-domain.lan, Status: SUCCESS"),
                               ("INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
                               "127.0.0.1, Status: SUCCESS"),
-                              ("INFO:porkbun_ddns:Deleting ALIAS-Record for my-domain.local with content: "
-                              "my-domain.lan, Status: SUCCESS"),
-                              ("INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
-                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS"),
-                              ("INFO:porkbun_ddns:Deleting CNAME-Record for my-domain.local with content: "
-                              "my-domain.lan, Status: SUCCESS"),
                               ("INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
                               "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS")])
 

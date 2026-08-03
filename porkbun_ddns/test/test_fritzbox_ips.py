@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import call, patch
 
 from porkbun_ddns import cli
+from porkbun_ddns.helpers import resolve_fritzbox_public_ips
 from porkbun_ddns.scripts import fritzbox_ips
 
 
@@ -52,6 +53,32 @@ class TestFritzboxIpsScript(unittest.TestCase):
     def test_cli_has_no_fritzbox_flag(self):
         with self.assertRaises(SystemExit):
             cli.main(["example.com", "--fritzbox", "192.168.1.1"])
+
+
+class TestResolveFritzboxPublicIps(unittest.TestCase):
+
+    def test_ipv6_only_queries_only_v6(self):
+        with patch("porkbun_ddns.helpers.get_ips_from_fritzbox",
+                   return_value="2001:db8::1") as mock:
+            ips = resolve_fritzbox_public_ips("192.168.1.1", ipv4=False, ipv6=True)
+        mock.assert_called_once_with("192.168.1.1", ip_version=6)
+        self.assertEqual(ips, ["2001:db8::1"])
+
+    def test_both_families_queries_in_order(self):
+        with patch("porkbun_ddns.helpers.get_ips_from_fritzbox",
+                   side_effect=["1.2.3.4", "2001:db8::1"]) as mock:
+            ips = resolve_fritzbox_public_ips("192.168.1.1", ipv4=True, ipv6=True)
+        self.assertEqual(mock.call_args_list, [
+            call("192.168.1.1", ip_version=4),
+            call("192.168.1.1", ip_version=6),
+        ])
+        self.assertEqual(ips, ["1.2.3.4", "2001:db8::1"])
+
+    def test_no_family_returns_empty_list(self):
+        with patch("porkbun_ddns.helpers.get_ips_from_fritzbox") as mock:
+            ips = resolve_fritzbox_public_ips("192.168.1.1", ipv4=False, ipv6=False)
+        mock.assert_not_called()
+        self.assertEqual(ips, [])
 
 
 if __name__ == "__main__":

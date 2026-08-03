@@ -38,12 +38,16 @@ def reconcile(
     reconciled against the same starting point.
     """
     actions: list[Ensure] = []
+    replaced_ids: set[str] = set()
     for ip in desired_ips:
         record_type = "A" if ip.version == 4 else "AAAA"
         content = ip.exploded
-        replaced: set[tuple[str, str]] = set()  # (record_type, content) ensured
+        ensured = False
         for record in existing_records:
             if record.get("name") != fqdn:
+                continue
+            rid = record.get("id")
+            if rid in replaced_ids:
                 continue
             rtype = record.get("type")
             if rtype in ("ALIAS", "CNAME") or (
@@ -52,15 +56,19 @@ def reconcile(
                 # Replace existing: overwrite ALIAS/CNAME or update a stale
                 # record of the same type. A matching same-type record with
                 # equal content is up-to-date and deliberately NOT replaced.
-                actions.append(
-                    Ensure(record_type, fqdn, content, record.get("id")))
-                replaced.add((record_type, content))
-        # Create missing / create new: no record of this type exists for the
-        # fqdn (ALIAS/CNAME does not count), and no replace already ensured it.
+                # Each existing record is claimed at most once, so a second
+                # desired ip of the same family cannot target it again.
+                actions.append(Ensure(record_type, fqdn, content, rid))
+                replaced_ids.add(rid)
+                ensured = True
+        # Create missing / create new: no (still unclaimed) record of this
+        # type exists for the fqdn (ALIAS/CNAME does not count), and no
+        # replace already ensured this ip.
         has_type = any(
             r.get("name") == fqdn and r.get("type") == record_type
+            and r.get("id") not in replaced_ids
             for r in existing_records
         )
-        if not has_type and (record_type, content) not in replaced:
+        if not has_type and not ensured:
             actions.append(Ensure(record_type, fqdn, content, None))
     return actions

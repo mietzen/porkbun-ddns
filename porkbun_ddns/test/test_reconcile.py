@@ -121,6 +121,23 @@ class TestReconcile(unittest.TestCase):
             [Ensure("A", FQDN, "5.6.7.8", "r1")],
         )
 
+    def test_two_desired_ipv4_with_one_stale_a_claims_once(self):
+        # Regression: two desired v4 IPs against a single stale A record must
+        # yield ONE replacement (r1 claimed once) plus a create for the extra
+        # ip - never two intents with the same replacing_id.
+        self.assertEqual(
+            reconcile(
+                [{"name": FQDN, "type": "A",
+                  "content": "1.2.3.4", "id": "r1"}],
+                [IPv4Address("5.6.7.8"), IPv4Address("9.9.9.9")],
+                FQDN,
+            ),
+            [
+                Ensure("A", FQDN, "5.6.7.8", "r1"),
+                Ensure("A", FQDN, "9.9.9.9", None),
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
