@@ -183,8 +183,8 @@ def test_retry_succeeds_after_transient_500s(mock_api):
                           ["203.0.113.5"], ipv4=True, ipv6=False)
     assert len(instance.changes) == 1
     assert len(mock_api.records["example.com"]) == 1
-    # 3 retrieve attempts (2 x 500, 1 x 200) + create + post-create retrieve.
-    assert mock_api.request_count == 5
+    # 3 retrieve attempts (2 x 500, 1 x 200) + create.
+    assert mock_api.request_count == 4
 
 
 def test_retry_gives_up_after_retry_count(mock_api):
@@ -274,8 +274,8 @@ def test_cli_retry_flags_recover_after_transient_failures(mock_api, caplog):
         "--retry-count", "3",
         "--retry-delay", "0",
     ])
-    # 3 retrieve attempts (2 x 500 + success), create, post-create retrieve.
-    assert mock_api.request_count == 5
+    # 3 retrieve attempts (2 x 500 + success), then create.
+    assert mock_api.request_count == 4
     assert mock_api.records["example.com"][0]["content"] == "203.0.113.5"
     assert "Retrying in 0 seconds (attempt 1/3)" in caplog.text
     assert "Retrying in 0 seconds (attempt 2/3)" in caplog.text
