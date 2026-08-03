@@ -98,13 +98,13 @@ def main(argv=sys.argv[1:]):
             for handler in logger.handlers:
                 handler.setLevel(logging.DEBUG)
 
-        config = extract_config(args)
+        app = extract_config(args)
         ipv4 = args.ipv4_only
         ipv6 = args.ipv6_only
         if not any([ipv4, ipv6]):
             ipv4 = ipv6 = True
 
-        porkbun_ddns = PorkbunDDNS(config=config, domain=args.domain,
+        porkbun_ddns = PorkbunDDNS(app.credentials, app.retry, domain=args.domain,
                                    public_ips=args.public_ips, fritzbox_ip=args.fritzbox,
                                    ipv4=ipv4, ipv6=ipv6)
         if args.subdomains:
@@ -114,7 +114,7 @@ def main(argv=sys.argv[1:]):
         else:
             porkbun_ddns.update_records()
         if porkbun_ddns.changes:
-            fire_webhook(config, porkbun_ddns.changes, porkbun_ddns.domain)
+            fire_webhook(app.webhook, porkbun_ddns.changes, porkbun_ddns.domain)
             porkbun_ddns.changes = []
     except PorkbunDDNS_Error as e:
         logger.error("Error: " + str(e))

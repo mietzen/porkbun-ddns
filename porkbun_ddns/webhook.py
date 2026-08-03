@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover - 3.10 fallback
 
 import jinja2
 
-from porkbun_ddns.config import Config
+from porkbun_ddns.config import WebhookConfig
 
 logger = logging.getLogger("porkbun_ddns")
 
@@ -98,7 +98,7 @@ def send_webhook(url: str, payload: str) -> None:
         logger.warning("Failed to send webhook to %s: %s", url, err)
 
 
-def fire_webhook(config: Config,
+def fire_webhook(config: WebhookConfig,
                  changes: Sequence[dict[str, Any]],
                  domain: str) -> bool:
     """Render and send one aggregated webhook for the given changes.
