@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import logging
 from time import sleep
@@ -37,7 +38,21 @@ if os.getenv('IPV4_ONLY', None) or os.getenv('IPV6_ONLY', None):
 public_ips = None
 if os.getenv('PUBLIC_IPS', None):
     public_ips = [x.strip() for x in os.getenv('PUBLIC_IPS', None).split(',')]
-fritzbox = os.getenv('FRITZBOX', None)
+
+ipv4 = ipv6 = False
+if os.getenv('IPV4', 'True').lower() in ('true', '1', 't'):
+    ipv4 = True
+if os.getenv('IPV6', 'False').lower() in ('true', '1', 't'):
+    ipv6 = True
+
+if not public_ips and os.getenv('FRITZBOX', None):
+    args = ['fritzbox-ips', os.getenv('FRITZBOX')]
+    if ipv4 and not ipv6:
+        args.append('--v4')
+    elif ipv6 and not ipv4:
+        args.append('--v6')
+    out = subprocess.run(args, capture_output=True, text=True, check=True)
+    public_ips = [ip for ip in out.stdout.split() if ip]
 
 app = AppConfig(
     credentials=Credentials(
@@ -56,12 +71,6 @@ app = AppConfig(
     ),
 )
 
-ipv4 = ipv6 = False
-if os.getenv('IPV4', 'True').lower() in ('true', '1', 't'):
-    ipv4 = True
-if os.getenv('IPV6', 'False').lower() in ('true', '1', 't'):
-    ipv6 = True
-    
 if not all([os.getenv('DOMAIN'), os.getenv('SECRETAPIKEY'), os.getenv('APIKEY')]):
     logger.info('Please set DOMAIN, SECRETAPIKEY and APIKEY')
     sys.exit(1)
@@ -71,7 +80,7 @@ if not any([ipv4, ipv6]):
     sys.exit(1)
 
 porkbun_ddns = PorkbunDDNS(app.credentials, app.retry, domain, public_ips=public_ips,
-                           fritzbox_ip=fritzbox, ipv4=ipv4, ipv6=ipv6)
+                           ipv4=ipv4, ipv6=ipv6)
 
 while True:
     subdomains = os.getenv('SUBDOMAINS', '')

@@ -58,10 +58,6 @@ def main(argv=sys.argv[1:]):
     public_ips.add_argument("-i", "--public-ips", nargs="*",
                             default=None, help="Public IPs (v4 and or v6)")
 
-    fritzbox = parser.add_mutually_exclusive_group()
-    fritzbox.add_argument("-f", "--fritzbox", default=None,
-                          help="IP or Domain of your Fritz!Box")
-
     ip = parser.add_mutually_exclusive_group()
     ip.add_argument("-4", "--ipv4-only", action="store_true",
                     help="Only set/update IPv4 A Records")
@@ -105,7 +101,7 @@ def main(argv=sys.argv[1:]):
             ipv4 = ipv6 = True
 
         porkbun_ddns = PorkbunDDNS(app.credentials, app.retry, domain=args.domain,
-                                   public_ips=args.public_ips, fritzbox_ip=args.fritzbox,
+                                   public_ips=args.public_ips,
                                    ipv4=ipv4, ipv6=ipv6)
         if args.subdomains:
             for s in args.subdomains:

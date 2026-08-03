@@ -5,6 +5,7 @@ import io
 import unittest
 from unittest.mock import call, patch
 
+from porkbun_ddns import cli
 from porkbun_ddns.scripts import fritzbox_ips
 
 
@@ -47,6 +48,10 @@ class TestFritzboxIpsScript(unittest.TestCase):
                    side_effect=Exception("boom")):
             code = fritzbox_ips.main(["192.168.1.1"])
         self.assertEqual(code, 1)
+
+    def test_cli_has_no_fritzbox_flag(self):
+        with self.assertRaises(SystemExit):
+            cli.main(["example.com", "--fritzbox", "192.168.1.1"])
 
 
 if __name__ == "__main__":
