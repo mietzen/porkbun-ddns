@@ -9,6 +9,15 @@
 `porkbun-ddns` is a unofficial DDNS-Client for Porkbun Domains.
 This library will only update the records if the IP(s) have changed or the dns entry didn't exist before, it will also set/update A (IPv4) and AAAA (IPv6) records.
 
+> ## ⚠️ v2.0.0 breaking changes
+>
+> Version **2.0.0** introduces breaking changes to the public `PorkbunDDNS` API and the CLI:
+>
+> - **Constructor**: `PorkbunDDNS(config, domain, ...)` -> `PorkbunDDNS(credentials, retry, domain, ...)`. `Config` is now `AppConfig(credentials, retry, webhook)` — build it with `Credentials`, `RetryPolicy` and `WebhookConfig`, or load it via `extract_config`.
+> - **CLI**: the `--fritzbox` / `-f` flag is removed. Pipe `fritzbox-ips` into `--public-ips` instead: `porkbun-ddns domain.com --public-ips "$(fritzbox-ips <fritzbox-ip>)"`.
+> - **Endpoint**: `Credentials.endpoint` now defaults to the real Porkbun endpoint (previously it raised when unset).
+>
+> See the full breakdown in [PR #163](https://github.com/mietzen/porkbun-ddns/pull/163).
 
 Since [porkbun-dynamic-dns-python](https://github.com/porkbundomains/porkbun-dynamic-dns-python) is deprecated I took it into my own hands to code a decent DDNS Client for Porkbun.
 Inspired by [con-f-use](https://github.com/con-f-use) [pull request](https://github.com/porkbundomains/porkbun-dynamic-dns-python/pull/6), I built a pip Package and a docker container.
