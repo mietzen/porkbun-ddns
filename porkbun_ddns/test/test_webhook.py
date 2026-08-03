@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 from urllib.error import URLError
 
 from porkbun_ddns import PorkbunDDNS
-from porkbun_ddns.config import Config
+from porkbun_ddns.config import AppConfig, Credentials, RetryPolicy, WebhookConfig
 from porkbun_ddns.test.test_porkbun_ddns import domain, ips, mock_api, valid_config
 from porkbun_ddns.webhook import (
     DEFAULT_WEBHOOK_TEMPLATE,
@@ -18,11 +18,14 @@ from porkbun_ddns.webhook import (
 logger = logging.getLogger("porkbun_ddns")
 logger.setLevel(logging.INFO)
 
-webhook_config = Config(
-    endpoint=valid_config.endpoint,
-    apikey=valid_config.apikey,
-    secretapikey=valid_config.secretapikey,
-    webhook_url="https://hooks.example.com/webhook",
+webhook_config = AppConfig(
+    credentials=Credentials(
+        apikey=valid_config.credentials.apikey,
+        secretapikey=valid_config.credentials.secretapikey,
+        endpoint=valid_config.credentials.endpoint,
+    ),
+    retry=RetryPolicy(),
+    webhook=WebhookConfig(webhook_url="https://hooks.example.com/webhook"),
 )
 
 change = {"record_type": "A", "fqdn": domain, "old_ip": "127.0.0.2", "new_ip": "127.0.0.1"}
@@ -56,13 +59,13 @@ class TestWebhookFiring(unittest.TestCase):
     def test_fires_on_change(self, mock_urlopen, mocker=None):
         mock_urlopen.return_value = mock_ok_response()
 
-        porkbun_ddns = PorkbunDDNS(webhook_config, domain, ips)
+        porkbun_ddns = PorkbunDDNS(webhook_config.credentials, webhook_config.retry, domain, ips)
         porkbun_ddns.set_subdomain("@")
         porkbun_ddns.update_records()
 
         self.assertEqual(len(porkbun_ddns.changes), 2)
         self.assertTrue(fire_webhook(
-            webhook_config, porkbun_ddns.changes, porkbun_ddns.domain))
+            webhook_config.webhook, porkbun_ddns.changes, porkbun_ddns.domain))
         mock_urlopen.assert_called_once()
 
         request = mock_urlopen.call_args.args[0]
@@ -92,23 +95,23 @@ class TestWebhookFiring(unittest.TestCase):
     def test_does_not_fire_when_up_to_date(self, mock_urlopen, mocker=None):
         mock_urlopen.return_value = mock_ok_response()
 
-        porkbun_ddns = PorkbunDDNS(webhook_config, domain, ips)
+        porkbun_ddns = PorkbunDDNS(webhook_config.credentials, webhook_config.retry, domain, ips)
         porkbun_ddns.set_subdomain("@")
         porkbun_ddns.update_records()
 
         self.assertEqual(porkbun_ddns.changes, [])
         self.assertFalse(fire_webhook(
-            webhook_config, porkbun_ddns.changes, porkbun_ddns.domain))
+            webhook_config.webhook, porkbun_ddns.changes, porkbun_ddns.domain))
         mock_urlopen.assert_not_called()
 
     @patch("urllib.request.urlopen")
     def test_does_not_fire_without_url(self, mock_urlopen):
-        self.assertFalse(fire_webhook(valid_config, [change], domain))
+        self.assertFalse(fire_webhook(valid_config.webhook, [change], domain))
         mock_urlopen.assert_not_called()
 
     @patch("urllib.request.urlopen")
     def test_does_not_fire_without_changes(self, mock_urlopen):
-        self.assertFalse(fire_webhook(webhook_config, [], domain))
+        self.assertFalse(fire_webhook(webhook_config.webhook, [], domain))
         mock_urlopen.assert_not_called()
 
     @patch.object(PorkbunDDNS,
@@ -117,21 +120,26 @@ class TestWebhookFiring(unittest.TestCase):
     @patch("urllib.request.urlopen")
     def test_aggregates_across_subdomains(self, mock_urlopen, mocker=None):
         mock_urlopen.return_value = mock_ok_response()
-        config = Config(
-            endpoint=valid_config.endpoint,
-            apikey=valid_config.apikey,
-            secretapikey=valid_config.secretapikey,
-            webhook_url="https://hooks.example.com/webhook",
-            webhook_template='{"text": "{{ changes | length }} changes for {{ domain }}"}',
+        config = AppConfig(
+            credentials=Credentials(
+                apikey=valid_config.credentials.apikey,
+                secretapikey=valid_config.credentials.secretapikey,
+                endpoint=valid_config.credentials.endpoint,
+            ),
+            retry=RetryPolicy(),
+            webhook=WebhookConfig(
+                webhook_url="https://hooks.example.com/webhook",
+                webhook_template='{"text": "{{ changes | length }} changes for {{ domain }}"}',
+            ),
         )
 
-        porkbun_ddns = PorkbunDDNS(config, domain, ["127.0.0.1"])
+        porkbun_ddns = PorkbunDDNS(config.credentials, config.retry, domain, ["127.0.0.1"])
         for subdomain in ["www", "api"]:
             porkbun_ddns.set_subdomain(subdomain)
             porkbun_ddns.update_records()
 
         self.assertEqual(len(porkbun_ddns.changes), 2)
-        self.assertTrue(fire_webhook(config, porkbun_ddns.changes, porkbun_ddns.domain))
+        self.assertTrue(fire_webhook(config.webhook, porkbun_ddns.changes, porkbun_ddns.domain))
         mock_urlopen.assert_called_once()
 
         request = mock_urlopen.call_args.args[0]
@@ -142,26 +150,27 @@ class TestWebhookFiring(unittest.TestCase):
     def test_failure_does_not_crash(self, mock_urlopen):
         mock_urlopen.side_effect = URLError(OSError(101, "Network is unreachable"))
         with self.assertLogs("porkbun_ddns", level="WARNING"):
-            self.assertTrue(fire_webhook(webhook_config, [change], domain))
+            self.assertTrue(fire_webhook(webhook_config.webhook, [change], domain))
         mock_urlopen.assert_called_once()
 
     @patch("urllib.request.urlopen")
     def test_timeout_does_not_crash(self, mock_urlopen):
         mock_urlopen.side_effect = TimeoutError("timed out")
         with self.assertLogs("porkbun_ddns", level="WARNING"):
-            self.assertTrue(fire_webhook(webhook_config, [change], domain))
+            self.assertTrue(fire_webhook(webhook_config.webhook, [change], domain))
 
     @patch("urllib.request.urlopen")
     def test_non_2xx_logs_warning(self, mock_urlopen):
         mock_urlopen.return_value = mock_ok_response(status=500)
         with self.assertLogs("porkbun_ddns", level="WARNING"):
-            self.assertTrue(fire_webhook(webhook_config, [change], domain))
+            self.assertTrue(fire_webhook(webhook_config.webhook, [change], domain))
 
     def test_webhook_fields_excluded_from_api_payload(self):
-        porkbun_ddns = PorkbunDDNS(webhook_config, domain, ips)
-        self.assertNotIn("webhook_url", porkbun_ddns.config)
-        self.assertNotIn("webhook_template", porkbun_ddns.config)
-        self.assertNotIn("webhook_template_file", porkbun_ddns.config)
+        porkbun_ddns = PorkbunDDNS(webhook_config.credentials, webhook_config.retry, domain, ips)
+        body = porkbun_ddns.credentials._asdict()
+        self.assertNotIn("webhook_url", body)
+        self.assertNotIn("webhook_template", body)
+        self.assertNotIn("webhook_template_file", body)
 
 
 class TestWebhookRendering(unittest.TestCase):

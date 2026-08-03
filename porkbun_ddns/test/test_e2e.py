@@ -15,7 +15,7 @@ from ipaddress import IPv6Address
 import pytest
 
 from porkbun_ddns import PorkbunDDNS, cli
-from porkbun_ddns.config import Config
+from porkbun_ddns.config import AppConfig, Credentials, RetryPolicy, WebhookConfig
 from porkbun_ddns.errors import PorkbunDDNS_Error
 from porkbun_ddns.test.mock_porkbun_api import PorkbunAPIMock
 from porkbun_ddns.webhook import fire_webhook
@@ -90,28 +90,44 @@ def webhook_capture() -> WebhookCaptureServer:
 
 def make_config(mock: PorkbunAPIMock,
                 webhook_url: str = "",
-                **overrides) -> Config:
-    """Build a Config pointing at the mock, with overridable kwargs."""
+                **overrides) -> AppConfig:
+    """Build an AppConfig pointing at the mock, with overridable kwargs."""
     values = {
         "endpoint": f"{mock.url}/api/json/v3",
         "apikey": "test-apikey",
         "secretapikey": "test-secret",
         "webhook_url": webhook_url,
-        "retry_count": "3",
-        "retry_delay": "0",
+        "retry_count": 3,
+        "retry_delay": 0,
     }
     values.update(overrides)
-    return Config(**values)
+    return AppConfig(
+        credentials=Credentials(
+            apikey=values["apikey"],
+            secretapikey=values["secretapikey"],
+            endpoint=values["endpoint"],
+        ),
+        retry=RetryPolicy(
+            retry_count=int(values["retry_count"]),
+            retry_delay=int(values["retry_delay"]),
+        ),
+        webhook=WebhookConfig(
+            webhook_url=values["webhook_url"],
+            webhook_template=values.get("webhook_template", ""),
+            webhook_template_file=values.get("webhook_template_file", ""),
+        ),
+    )
 
 
-def run_update(config: Config,
+def run_update(config: AppConfig,
                public_ips: list[str],
                *,
                ipv4: bool = True,
                ipv6: bool = True) -> PorkbunDDNS:
     """Run one full update pass and return the client instance."""
     instance = PorkbunDDNS(
-        config, DOMAIN, public_ips=public_ips, ipv4=ipv4, ipv6=ipv6)
+        config.credentials, config.retry, DOMAIN, public_ips=public_ips,
+        ipv4=ipv4, ipv6=ipv6)
     instance.update_records()
     return instance
 
@@ -189,7 +205,7 @@ def test_invalid_api_keys_fail_fast(mock_api):
 def test_webhook_sent_on_change_default_template(mock_api, webhook_capture):
     config = make_config(mock_api, webhook_url=webhook_capture.url)
     instance = run_update(config, ["203.0.113.5"], ipv4=True, ipv6=False)
-    assert fire_webhook(config, instance.changes, instance.domain)
+    assert fire_webhook(config.webhook, instance.changes, instance.domain)
     assert len(webhook_capture.bodies) == 1
     payload = json.loads(webhook_capture.bodies[0].decode("utf-8"))
     assert payload == {"text": "IP changed:  -> 203.0.113.5 (example.com)"}
@@ -202,7 +218,7 @@ def test_webhook_inline_template(mock_api, webhook_capture):
         webhook_template='{"msg": "{{ new_ips | join(", ") }} for {{ domain }}"}',
     )
     instance = run_update(config, ["203.0.113.5"], ipv4=True, ipv6=False)
-    assert fire_webhook(config, instance.changes, instance.domain)
+    assert fire_webhook(config.webhook, instance.changes, instance.domain)
     assert len(webhook_capture.bodies) == 1
     payload = json.loads(webhook_capture.bodies[0].decode("utf-8"))
     assert payload == {"msg": "203.0.113.5 for example.com"}
@@ -218,7 +234,7 @@ def test_webhook_template_file_precedence(mock_api, webhook_capture, tmp_path):
         webhook_template_file=str(template_file),
     )
     instance = run_update(config, ["203.0.113.5"], ipv4=True, ipv6=False)
-    assert fire_webhook(config, instance.changes, instance.domain)
+    assert fire_webhook(config.webhook, instance.changes, instance.domain)
     assert len(webhook_capture.bodies) == 1
     payload = json.loads(webhook_capture.bodies[0].decode("utf-8"))
     assert payload == {"from": "file", "domain": "example.com"}
@@ -229,19 +245,19 @@ def test_webhook_fire_and_forget_on_failure(mock_api, webhook_capture):
     config = make_config(mock_api, webhook_url=webhook_capture.url)
     instance = run_update(config, ["203.0.113.5"], ipv4=True, ipv6=False)
     # The webhook server's 500 must not propagate to the caller.
-    assert fire_webhook(config, instance.changes, instance.domain)
+    assert fire_webhook(config.webhook, instance.changes, instance.domain)
     assert len(webhook_capture.bodies) == 1
 
 
 def test_no_webhook_when_no_changes(mock_api, webhook_capture):
     config = make_config(mock_api, webhook_url=webhook_capture.url)
     first = run_update(config, ["203.0.113.5"], ipv4=True, ipv6=False)
-    assert fire_webhook(config, first.changes, first.domain)
+    assert fire_webhook(config.webhook, first.changes, first.domain)
     assert len(webhook_capture.bodies) == 1
 
     second = run_update(config, ["203.0.113.5"], ipv4=True, ipv6=False)
     assert second.changes == []
-    assert not fire_webhook(config, second.changes, second.domain)
+    assert not fire_webhook(config.webhook, second.changes, second.domain)
     assert len(webhook_capture.bodies) == 1
 
 
