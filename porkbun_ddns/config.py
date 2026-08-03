@@ -13,10 +13,6 @@ logger = logging.getLogger("porkbun_ddns")
 
 DEFAULT_ENDPOINT: Final = "https://api.porkbun.com/api/json/v3"
 
-#: Config fields that are used for webhook delivery only and must never be
-#: sent to the Porkbun API as part of a request body.
-WEBHOOK_CONFIG_FIELDS: Final = ("webhook_url", "webhook_template", "webhook_template_file")
-
 config_file_default_content: Final = \
     f"""
 {{
@@ -54,19 +50,43 @@ def load_config_file(config_file: Path | None) -> dict[str, str] | None:
     return config
 
 
-class Config(NamedTuple):
-    endpoint: str
+class Credentials(NamedTuple):
     apikey: str
     secretapikey: str
+    endpoint: str = DEFAULT_ENDPOINT
+
+
+class RetryPolicy(NamedTuple):
+    retry_count: int = 3
+    retry_delay: int = 5
+
+
+class WebhookConfig(NamedTuple):
     webhook_url: str = ""
     webhook_template: str = ""
     webhook_template_file: str = ""
-    retry_count: str = "3"
-    retry_delay: str = "5"
 
 
-# Config fields that must never be sent to the Porkbun API as part of a request body.
-RETRY_FIELDS: Final = ("retry_count", "retry_delay")
+class AppConfig(NamedTuple):
+    credentials: Credentials
+    retry: RetryPolicy
+    webhook: WebhookConfig
+
+
+_LEAF_FIELDS: Final = (
+    "apikey", "secretapikey", "endpoint",
+    "retry_count", "retry_delay",
+    "webhook_url", "webhook_template", "webhook_template_file",
+)
+
+_LEAF_DEFAULTS: Final = {
+    "endpoint": DEFAULT_ENDPOINT,
+    "retry_count": "3",
+    "retry_delay": "5",
+    "webhook_url": "",
+    "webhook_template": "",
+    "webhook_template_file": "",
+}
 
 
 class _Config:
@@ -81,10 +101,25 @@ class _Config:
         else:
             logger.debug("Skiped loading config file")
         self.options = {name: self._get_option_value(
-            name) for name in Config._fields}
+            name) for name in _LEAF_FIELDS}
 
-    def get_options(self) -> Config:
-        return Config(**self.options)
+    def get_options(self) -> AppConfig:
+        return AppConfig(
+            credentials=Credentials(
+                apikey=self.options["apikey"],
+                secretapikey=self.options["secretapikey"],
+                endpoint=self.options["endpoint"],
+            ),
+            retry=RetryPolicy(
+                retry_count=int(self.options["retry_count"]),
+                retry_delay=int(self.options["retry_delay"]),
+            ),
+            webhook=WebhookConfig(
+                webhook_url=self.options["webhook_url"],
+                webhook_template=self.options["webhook_template"],
+                webhook_template_file=self.options["webhook_template_file"],
+            ),
+        )
 
     def _get_option_value(self, option_name: str) -> str:
         """Tries to get a value for the option_name from the program-arguments first,
@@ -98,8 +133,8 @@ class _Config:
             return str(param)
         if self.config_file_content and (param := self.config_file_content.get(option_name, None)):
             return str(param)
-        if option_name in Config._field_defaults:
-            return Config._field_defaults[option_name]
+        if option_name in _LEAF_DEFAULTS:
+            return _LEAF_DEFAULTS[option_name]
         raise PorkbunDDNS_Error(
             f"'{option_name}' is not defined via CLI-arguments,"
             f" as an environment-variable"
@@ -109,13 +144,28 @@ class _Config:
         )
 
 
-def extract_config(extract_from: argparse.Namespace | Path) -> Config:
-    """Extracts a Config-object, either from an argparse-Namespace or from  a Path to a config-file"""
+def extract_config(extract_from: argparse.Namespace | Path) -> AppConfig:
+    """Extracts an AppConfig-object, either from an argparse-Namespace or from a Path to a config-file"""
     if isinstance(extract_from, argparse.Namespace):
         return _Config(extract_from).get_options()
     if isinstance(extract_from, Path):
         if content := load_config_file(extract_from):
-            return Config(**content)
+            return AppConfig(
+                credentials=Credentials(
+                    apikey=content.get("apikey", ""),
+                    secretapikey=content.get("secretapikey", ""),
+                    endpoint=content.get("endpoint", DEFAULT_ENDPOINT),
+                ),
+                retry=RetryPolicy(
+                    retry_count=int(content.get("retry_count", 3)),
+                    retry_delay=int(content.get("retry_delay", 5)),
+                ),
+                webhook=WebhookConfig(
+                    webhook_url=content.get("webhook_url", ""),
+                    webhook_template=content.get("webhook_template", ""),
+                    webhook_template_file=content.get("webhook_template_file", ""),
+                ),
+            )
         raise ValueError(f"Not a file: {extract_from}")
     raise TypeError(f"{extract_from} is of type \
         {type(extract_from)}, not Namespace/Path")
