@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import json
 import logging
-import time
 import urllib.request
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from urllib.error import HTTPError, URLError
+from urllib.error import URLError
 
+from porkbun_ddns.api import PorkbunAPIClient
 from porkbun_ddns.config import Credentials, RetryPolicy
 from porkbun_ddns.errors import PorkbunDDNS_Error
 from porkbun_ddns.helpers import get_ips_from_fritzbox
@@ -27,11 +27,11 @@ class PorkbunDDNS:
             fritzbox_ip: str | None = None,
             ipv4: bool = True,
             ipv6: bool = True,
+            client: PorkbunAPIClient | None = None,
     ) -> None:
 
         self.credentials = credentials
-        self.retry_count = retry.retry_count
-        self.retry_delay = retry.retry_delay
+        self.client = client or PorkbunAPIClient(credentials, retry)
         self.static_ips = public_ips
         self.domain = domain.lower()
         self.records = None
@@ -105,48 +105,10 @@ class PorkbunDDNS:
 
         return [ip_address(x) for x in public_ips if not ip_address(x).is_unspecified]
 
-    def _api(self, target: str, data: dict | None = None) -> dict:
-        """Send an API request to a specified target.
-
-        Transient failures (unreachable endpoint, timeouts, HTTP 5xx) are
-        retried up to ``retry_count`` times, waiting ``retry_delay`` seconds
-        between attempts, before a ``PorkbunDDNS_Error`` is raised.
-        """
-        body = (data or self.credentials._asdict())
-        req = urllib.request.Request(self.credentials.endpoint + target)
-        req.data = json.dumps(body).encode("utf8")
-        for attempt in range(self.retry_count):
-            try:
-                response = urllib.request.urlopen(req, timeout=30).read()
-                return json.loads(response.decode("utf-8"))
-            except HTTPError as err:
-                if err.code == 400:
-                    raise PorkbunDDNS_Error("Invalid API Keys!")
-                if err.code < 500:
-                    raise
-                error_message = f"Error reaching {req.get_full_url()}! - HTTP {err.code}"
-            except URLError as err:
-                error_message = f"Error reaching {req.get_full_url()}! - {err.reason}"
-            if attempt < self.retry_count - 1:
-                logger.warning(
-                    "%s Retrying in %s seconds (attempt %s/%s).",
-                    error_message, self.retry_delay, attempt + 1, self.retry_count)
-                time.sleep(self.retry_delay)
-            else:
-                raise PorkbunDDNS_Error(error_message)
-
-    def get_records(self) -> dict:
+    def get_records(self) -> list:
         """Retrieve the DNS records for the specified domain.
         """
-        records = self._api("/dns/retrieve/" + self.domain)
-        if records["status"] == "SUCCESS":
-            return records["records"]
-        else:
-            raise PorkbunDDNS_Error(
-                "Failed to get records.\n" +
-                f"Make sure you specified the correct domain ({self.domain}),\n" +
-                "and that API access has been enabled for this domain.",
-            )
+        return self.client.retrieve_records(self.domain)
 
     def update_records(self):
         """Update DNS records for the specified domain.
@@ -230,18 +192,12 @@ class PorkbunDDNS:
                 for x in self.records
                 if x["id"] == domain_id
             )
-            status = self._api("/dns/delete/" + self.domain + "/" + domain_id)
-            logger.info("Deleting {}-Record for {} with content: {}, Status: {}".format(type,
-                                                                                        name, content,
-                                                                                        status["status"]))
+            status = self.client.delete_record(self.domain, domain_id)
+            logger.info(f"Deleting {type}-Record for {name} with content: {content}, Status: {status}")
 
     def _create_records(self, ip: IPv4Address | IPv6Address, record_type: str):
         """Create DNS records for the subdomain with the given IP address and type.
         """
-        data = self.credentials._asdict()
-        data.update({"name": self.subdomain, "type": record_type,
-                     "content": ip.exploded, "ttl": 600})
-        status = self._api("/dns/create/" + self.domain, data)
-        logger.info("Creating {}-Record for {} with content: {}, Status: {}".format(record_type,
-                                                                                    self.fqdn, ip.exploded,
-                                                                                    status["status"]))
+        status = self.client.create_record(
+            self.domain, self.subdomain, record_type, ip.exploded)
+        logger.info(f"Creating {record_type}-Record for {self.fqdn} with content: {ip.exploded}, Status: {status}")
