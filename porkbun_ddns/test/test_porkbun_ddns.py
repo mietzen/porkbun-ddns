@@ -8,8 +8,8 @@ from porkbun_ddns.api import PorkbunAPIClient
 from porkbun_ddns.config import AppConfig, Credentials, RetryPolicy, WebhookConfig
 from porkbun_ddns.errors import PorkbunDDNS_Error
 from porkbun_ddns.resolver import PublicIPResolver
-from porkbun_ddns.test.fakes import FakePorkbunAPIClient
 from porkbun_ddns.test.mock_porkbun_api import PorkbunAPIMock
+from porkbun_ddns.test.stubs import StubPorkbunAPIClient
 
 logger = logging.getLogger("porkbun_ddns")
 logger.setLevel(logging.INFO)
@@ -59,7 +59,7 @@ class TestPorkbunDDNS(unittest.TestCase):
     maxDiff = None
 
     def test_record_exists_and_up_to_date(self):
-        fake = FakePorkbunAPIClient(records=mock_api(
+        fake = StubPorkbunAPIClient(records=mock_api(
             status="SUCCESS",
             mock_records=[
                 {
@@ -81,7 +81,7 @@ class TestPorkbunDDNS(unittest.TestCase):
                               "INFO:porkbun_ddns:AAAA-Record of my-domain.local is up to date!"])
 
     def test_record_exists_and_out_dated(self):
-        fake = FakePorkbunAPIClient(records=mock_api(
+        fake = StubPorkbunAPIClient(records=mock_api(
             status="SUCCESS",
             mock_records=[
                 {
@@ -109,7 +109,7 @@ class TestPorkbunDDNS(unittest.TestCase):
                               "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS")])
 
     def test_record_do_not_exists(self):
-        fake = FakePorkbunAPIClient(records=mock_api()["records"])
+        fake = StubPorkbunAPIClient(records=mock_api()["records"])
         porkbun_ddns = PorkbunDDNS(valid_config.credentials, valid_config.retry, domain, ips,
                                    client=fake)
         with self.assertLogs("porkbun_ddns", level="INFO") as cm:
@@ -122,7 +122,7 @@ class TestPorkbunDDNS(unittest.TestCase):
                               "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS")])
 
     def test_record_overwrite_alias_and_cname(self):
-        fake = FakePorkbunAPIClient(records=mock_api(
+        fake = StubPorkbunAPIClient(records=mock_api(
             status="SUCCESS",
             mock_records=[
                 {

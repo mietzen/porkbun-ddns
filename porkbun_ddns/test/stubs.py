@@ -5,8 +5,8 @@ from __future__ import annotations
 from porkbun_ddns.errors import PorkbunDDNS_Error
 
 
-class FakePorkbunAPIClient:
-    """Configurable fake of :class:`PorkbunAPIClient` for orchestrator tests.
+class StubPorkbunAPIClient:
+    """Configurable stub of :class:`PorkbunAPIClient` for orchestrator tests.
 
     ``retrieve_records`` returns the canned records list and records each
     ``create_record``/``delete_record`` call for assertion; both return the

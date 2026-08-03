@@ -8,7 +8,7 @@ from urllib.error import URLError
 
 from porkbun_ddns import PorkbunDDNS
 from porkbun_ddns.config import AppConfig, Credentials, RetryPolicy, WebhookConfig
-from porkbun_ddns.test.fakes import FakePorkbunAPIClient
+from porkbun_ddns.test.stubs import StubPorkbunAPIClient
 from porkbun_ddns.test.test_porkbun_ddns import domain, ips, mock_api, valid_config
 from porkbun_ddns.webhook import (
     DEFAULT_WEBHOOK_TEMPLATE,
@@ -45,7 +45,7 @@ class TestWebhookFiring(unittest.TestCase):
     def test_fires_on_change(self):
         mock_urlopen = MagicMock()
         mock_urlopen.return_value = mock_ok_response()
-        fake = FakePorkbunAPIClient(records=mock_api(
+        fake = StubPorkbunAPIClient(records=mock_api(
             status="SUCCESS",
             mock_records=[
                 {
@@ -80,7 +80,7 @@ class TestWebhookFiring(unittest.TestCase):
 
     def test_does_not_fire_when_up_to_date(self):
         mock_urlopen = MagicMock()
-        fake = FakePorkbunAPIClient(records=mock_api(
+        fake = StubPorkbunAPIClient(records=mock_api(
             status="SUCCESS",
             mock_records=[
                 {
@@ -131,7 +131,7 @@ class TestWebhookFiring(unittest.TestCase):
                 webhook_template='{"text": "{{ changes | length }} changes for {{ domain }}"}',
             ),
         )
-        fake = FakePorkbunAPIClient(records=mock_api()["records"])
+        fake = StubPorkbunAPIClient(records=mock_api()["records"])
 
         porkbun_ddns = PorkbunDDNS(config.credentials, config.retry, domain, ["127.0.0.1"],
                                    client=fake)
