@@ -8,6 +8,7 @@ from urllib.error import URLError
 
 from porkbun_ddns import PorkbunDDNS
 from porkbun_ddns.config import AppConfig, Credentials, RetryPolicy, WebhookConfig
+from porkbun_ddns.test.fakes import FakePorkbunAPIClient
 from porkbun_ddns.test.test_porkbun_ddns import domain, ips, mock_api, valid_config
 from porkbun_ddns.webhook import (
     DEFAULT_WEBHOOK_TEMPLATE,
@@ -41,25 +42,24 @@ def mock_ok_response(status=200):
 class TestWebhookFiring(unittest.TestCase):
     maxDiff = None
 
-    @patch.object(PorkbunDDNS,
-                  "_api",
-                  return_value=mock_api(
-                      status="SUCCESS",
-                      mock_records=[
-                          {
-                              "name": domain,
-                              "type": "A",
-                              "content": "127.0.0.2"},
-                          {
-                              "name": domain,
-                              "type": "AAAA",
-                              "content": "0000:0000:0000:0000:0000:0000:0000:0002"},
-                      ]))
     @patch("urllib.request.urlopen")
-    def test_fires_on_change(self, mock_urlopen, mocker=None):
+    def test_fires_on_change(self, mock_urlopen):
         mock_urlopen.return_value = mock_ok_response()
+        fake = FakePorkbunAPIClient(records=mock_api(
+            status="SUCCESS",
+            mock_records=[
+                {
+                    "name": domain,
+                    "type": "A",
+                    "content": "127.0.0.2"},
+                {
+                    "name": domain,
+                    "type": "AAAA",
+                    "content": "0000:0000:0000:0000:0000:0000:0000:0002"},
+            ])["records"])
 
-        porkbun_ddns = PorkbunDDNS(webhook_config.credentials, webhook_config.retry, domain, ips)
+        porkbun_ddns = PorkbunDDNS(webhook_config.credentials, webhook_config.retry, domain, ips,
+                                   client=fake)
         porkbun_ddns.set_subdomain("@")
         porkbun_ddns.update_records()
 
@@ -77,25 +77,24 @@ class TestWebhookFiring(unittest.TestCase):
         self.assertIn("127.0.0.2", payload["text"])
         self.assertIn("127.0.0.1", payload["text"])
 
-    @patch.object(PorkbunDDNS,
-                  "_api",
-                  return_value=mock_api(
-                      status="SUCCESS",
-                      mock_records=[
-                          {
-                              "name": domain,
-                              "type": "A",
-                              "content": "127.0.0.1"},
-                          {
-                              "name": domain,
-                              "type": "AAAA",
-                              "content": "0000:0000:0000:0000:0000:0000:0000:0001"},
-                      ]))
     @patch("urllib.request.urlopen")
-    def test_does_not_fire_when_up_to_date(self, mock_urlopen, mocker=None):
+    def test_does_not_fire_when_up_to_date(self, mock_urlopen):
         mock_urlopen.return_value = mock_ok_response()
+        fake = FakePorkbunAPIClient(records=mock_api(
+            status="SUCCESS",
+            mock_records=[
+                {
+                    "name": domain,
+                    "type": "A",
+                    "content": "127.0.0.1"},
+                {
+                    "name": domain,
+                    "type": "AAAA",
+                    "content": "0000:0000:0000:0000:0000:0000:0000:0001"},
+            ])["records"])
 
-        porkbun_ddns = PorkbunDDNS(webhook_config.credentials, webhook_config.retry, domain, ips)
+        porkbun_ddns = PorkbunDDNS(webhook_config.credentials, webhook_config.retry, domain, ips,
+                                   client=fake)
         porkbun_ddns.set_subdomain("@")
         porkbun_ddns.update_records()
 
@@ -114,11 +113,8 @@ class TestWebhookFiring(unittest.TestCase):
         self.assertFalse(fire_webhook(webhook_config.webhook, [], domain))
         mock_urlopen.assert_not_called()
 
-    @patch.object(PorkbunDDNS,
-                  "_api",
-                  side_effect=[mock_api()] * 6)
     @patch("urllib.request.urlopen")
-    def test_aggregates_across_subdomains(self, mock_urlopen, mocker=None):
+    def test_aggregates_across_subdomains(self, mock_urlopen):
         mock_urlopen.return_value = mock_ok_response()
         config = AppConfig(
             credentials=Credentials(
@@ -132,8 +128,10 @@ class TestWebhookFiring(unittest.TestCase):
                 webhook_template='{"text": "{{ changes | length }} changes for {{ domain }}"}',
             ),
         )
+        fake = FakePorkbunAPIClient(records=mock_api()["records"])
 
-        porkbun_ddns = PorkbunDDNS(config.credentials, config.retry, domain, ["127.0.0.1"])
+        porkbun_ddns = PorkbunDDNS(config.credentials, config.retry, domain, ["127.0.0.1"],
+                                   client=fake)
         for subdomain in ["www", "api"]:
             porkbun_ddns.set_subdomain(subdomain)
             porkbun_ddns.update_records()

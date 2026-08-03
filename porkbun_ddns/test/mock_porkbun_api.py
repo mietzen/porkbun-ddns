@@ -31,8 +31,9 @@ class PorkbunAPIMock:
 
     Records are stored per domain in ``records`` (domain -> list of record
     dicts). ``fail_next`` makes the next request fail with HTTP 500, and
-    ``request_count`` counts every request received. Every response sent is
-    recorded as ``(path, status, body)`` in ``responses``.
+    ``request_count`` counts every request received. Every request body is
+    recorded in ``request_bodies`` and every response sent is recorded as
+    ``(path, status, body)`` in ``responses``.
     """
 
     def __init__(self, apikey: str, secretapikey: str) -> None:
@@ -42,6 +43,7 @@ class PorkbunAPIMock:
         self.fail_next = 0
         self.request_count = 0
         self.responses: list[tuple[str, int, dict | None]] = []
+        self.request_bodies: list[dict] = []
         self._next_id = 1
         self._server: ThreadingHTTPServer | None = None
         self._thread: threading.Thread | None = None
@@ -91,6 +93,7 @@ class PorkbunAPIMock:
             self._respond(handler, 400,
                           {"status": "ERROR", "message": "Invalid JSON"})
             return
+        self.request_bodies.append(body)
         if (body.get("apikey") != self.apikey
                 or body.get("secretapikey") != self.secretapikey):
             self._respond(handler, 400,
