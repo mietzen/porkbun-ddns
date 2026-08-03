@@ -7,7 +7,7 @@ import urllib.request
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from urllib.error import HTTPError, URLError
 
-from porkbun_ddns.config import RETRY_FIELDS, WEBHOOK_CONFIG_FIELDS, Config
+from porkbun_ddns.config import Credentials, RetryPolicy
 from porkbun_ddns.errors import PorkbunDDNS_Error
 from porkbun_ddns.helpers import get_ips_from_fritzbox
 
@@ -20,7 +20,8 @@ class PorkbunDDNS:
 
     def __init__(
             self,
-            config: Config,
+            credentials: Credentials,
+            retry: RetryPolicy,
             domain: str,
             public_ips: list | None = None,
             fritzbox_ip: str | None = None,
@@ -28,10 +29,9 @@ class PorkbunDDNS:
             ipv6: bool = True,
     ) -> None:
 
-        self.config = {key: value for key, value in config._asdict().items()
-                       if key not in WEBHOOK_CONFIG_FIELDS}
-        self.retry_count = int(config.retry_count)
-        self.retry_delay = int(config.retry_delay)
+        self.credentials = credentials
+        self.retry_count = retry.retry_count
+        self.retry_delay = retry.retry_delay
         self.static_ips = public_ips
         self.domain = domain.lower()
         self.records = None
@@ -112,9 +112,8 @@ class PorkbunDDNS:
         retried up to ``retry_count`` times, waiting ``retry_delay`` seconds
         between attempts, before a ``PorkbunDDNS_Error`` is raised.
         """
-        body = {key: value for key, value in (data or self.config).items()
-                if key not in RETRY_FIELDS}
-        req = urllib.request.Request(self.config["endpoint"] + target)
+        body = (data or self.credentials._asdict())
+        req = urllib.request.Request(self.credentials.endpoint + target)
         req.data = json.dumps(body).encode("utf8")
         for attempt in range(self.retry_count):
             try:
@@ -239,7 +238,7 @@ class PorkbunDDNS:
     def _create_records(self, ip: IPv4Address | IPv6Address, record_type: str):
         """Create DNS records for the subdomain with the given IP address and type.
         """
-        data = self.config.copy()
+        data = self.credentials._asdict()
         data.update({"name": self.subdomain, "type": record_type,
                      "content": ip.exploded, "ttl": 600})
         status = self._api("/dns/create/" + self.domain, data)
