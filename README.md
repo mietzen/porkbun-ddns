@@ -36,7 +36,14 @@ pip install porkbun-ddns
 ## Usage
 
 ```Shell
-usage: porkbun-ddns [-h] [-c CONFIG] [-e ENDPOINT] [-pk APIKEY] [-sk SECRETAPIKEY] [--retry-count RETRY_COUNT] [--retry-delay RETRY_DELAY] [--webhook-url WEBHOOK_URL] [--webhook-template WEBHOOK_TEMPLATE] [--webhook-template-file WEBHOOK_TEMPLATE_FILE] [--log-level LOG_LEVEL] [-i [PUBLIC_IPS ...]] [-f FRITZBOX] [-4 | -6] [-v] [--env_only] domain [subdomains ...]
+usage: porkbun-ddns [-h] [-c CONFIG] [-e ENDPOINT] [-pk APIKEY] [-sk SECRETAPIKEY]
+              [--retry-count RETRY_COUNT] [--retry-delay RETRY_DELAY]
+              [--webhook-url WEBHOOK_URL]
+              [--webhook-template WEBHOOK_TEMPLATE]
+              [--webhook-template-file WEBHOOK_TEMPLATE_FILE]
+              [--log-level LOG_LEVEL] [-i [PUBLIC_IPS ...]] [-4 | -6] [-v]
+              [--env_only]
+              domain [subdomains ...]
 
 positional arguments:
   domain                Domain to be updated
@@ -45,7 +52,8 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   -c CONFIG, --config CONFIG
-                        Path to config file (default: ~/.config/porkbun-ddns-config.json)
+                        Path to config file (default:
+                        ~/.config/porkbun-ddns-config.json)
   -e ENDPOINT, --endpoint ENDPOINT
                         The endpoint
   -pk APIKEY, --apikey APIKEY
@@ -53,25 +61,26 @@ options:
   -sk SECRETAPIKEY, --secretapikey SECRETAPIKEY
                         The secret API-key
   --retry-count RETRY_COUNT
-                        Number of attempts for transient API failures (default: 3)
+                        Number of attempts for transient API failures
   --retry-delay RETRY_DELAY
-                        Seconds to wait between retry attempts (default: 5)
+                        Seconds to wait between retry attempts
   --webhook-url WEBHOOK_URL
                         Webhook URL to notify when IPs change
   --webhook-template WEBHOOK_TEMPLATE
                         Jinja2 template for the webhook payload
   --webhook-template-file WEBHOOK_TEMPLATE_FILE
-                        Path to a file containing the Jinja2 webhook template (takes precedence over --webhook-template)
+                        Path to a file containing the Jinja2 webhook template
+                        (takes precedence over --webhook-template)
   --log-level LOG_LEVEL
-                        Set log verbosity (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+                        Set log verbosity (DEBUG, INFO, WARNING, ERROR,
+                        CRITICAL)
   -i [PUBLIC_IPS ...], --public-ips [PUBLIC_IPS ...]
                         Public IPs (v4 and or v6)
-  -f FRITZBOX, --fritzbox FRITZBOX
-                        IP or Domain of your Fritz!Box
   -4, --ipv4-only       Only set/update IPv4 A Records
   -6, --ipv6-only       Only set/update IPv6 AAAA Records
   -v, --verbose         Show Debug Output
-  --env_only            Don't use any config, get all variables from the environment
+  --env_only            Don't use any config, get all variables from the
+                        environment
 ```
 
 ### The parameter *endpoint*, *apikey*, *secretapikey*
@@ -151,8 +160,8 @@ $ porkbun-ddns domain.com '*'
 # Set IP's explicit
 $ porkbun-ddns domain.com my_subdomain -i '1.2.3.4' '1234:abcd:0:4567::8900'
 
-# Use Fritz!Box to obtain IP's and set IPv4 A Record only
-$ porkbun-ddns "./config.json" domain.com my_subdomain -f fritz.box -4
+# Use Fritz!Box to obtain IP's (via fritzbox-ips sidecar) and set IPv4 A Record only
+$ porkbun-ddns domain.com my_subdomain --public-ips "$(fritzbox-ips fritz.box)" -4
 ```
 
 You can set up a cron job get the full path to porkbun-ddns with `which porkbun-ddns`, then execute `crontab -e` and add the following line:
@@ -187,8 +196,8 @@ services:
       SECRETAPIKEY: "<YOUR-SECRETAPIKEY>" # Your Porkbun Secret-API-Key
       APIKEY: "<YOUR-APIKEY>" # Your Porkbun API-Key
       # API_ENDPOINT: "https://api.porkbun.com/api/json/v3" # Override the Porkbun API endpoint (e.g. a mirror/proxy)
-      # PUBLIC_IPS: "1.2.3.4,2001:043e::1" # Set if you got static IP's
-      # FRITZBOX: "192.168.178.1" # Use Fritz!BOX to obtain Public IP's
+      # PUBLIC_IPS: "1.2.3.4,2001:043e::1" # Set if you got static IP's (wins over FRITZBOX)
+      # FRITZBOX: "192.168.178.1" # Use Fritz!BOX to obtain Public IP's (queried directly by the entrypoint)
       # SLEEP: "300" # Seconds to sleep between DynDNS runs
       # IPV4: "TRUE" # Set IPv4 address
       # IPV6: "TRUE" # Set IPv6 address
@@ -233,15 +242,26 @@ docker run -d \
 ```python
 from pathlib import Path
 from porkbun_ddns import PorkbunDDNS
-from porkbun_ddns.config import Config, DEFAULT_ENDPOINT, extract_config
+from porkbun_ddns.config import AppConfig, Credentials, RetryPolicy, WebhookConfig, DEFAULT_ENDPOINT, extract_config
 
 
-config = Config(DEFAULT_ENDPOINT, "YOUR-APIKEY", "YOUR-SECRETAPIKEY")
-porkbun_ddns = PorkbunDDNS(config, 'domain.com')
-# config = extract_config(Path("./config.json"))
-# porkbun_ddns = PorkbunDDNS(config, 'domain.com')
-# porkbun_ddns_ip = PorkbunDDNS(config, 'domain.com', public_ips=['1.2.3.4','1234:abcd:0:4567::8900'])
-# porkbun_ddns_fritz = PorkbunDDNS(config, 'domain.com', fritzbox_ip='fritz.box', ipv6=False)
+# Build config directly:
+app = AppConfig(
+    credentials=Credentials(apikey="YOUR-APIKEY", secretapikey="YOUR-SECRETAPIKEY", endpoint=DEFAULT_ENDPOINT),
+    retry=RetryPolicy(),  # defaults: retry_count=3, retry_delay=5
+    webhook=WebhookConfig(),
+)
+porkbun_ddns = PorkbunDDNS(app.credentials, app.retry, 'domain.com')
+
+# Or load from config file:
+# app = extract_config(Path("./config.json"))
+# porkbun_ddns = PorkbunDDNS(app.credentials, app.retry, 'domain.com')
+
+# With static IPs:
+# porkbun_ddns = PorkbunDDNS(app.credentials, app.retry, 'domain.com', public_ips=['1.2.3.4', '1234:abcd:0:4567::8900'])
+
+# With Fritz!Box (via fritzbox-ips sidecar CLI):
+# porkbun-ddns domain.com --public-ips "$(fritzbox-ips fritz.box)"
 
 porkbun_ddns.set_subdomain('my_subdomain')
 porkbun_ddns.update_records()

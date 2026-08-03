@@ -58,10 +58,6 @@ def main(argv=sys.argv[1:]):
     public_ips.add_argument("-i", "--public-ips", nargs="*",
                             default=None, help="Public IPs (v4 and or v6)")
 
-    fritzbox = parser.add_mutually_exclusive_group()
-    fritzbox.add_argument("-f", "--fritzbox", default=None,
-                          help="IP or Domain of your Fritz!Box")
-
     ip = parser.add_mutually_exclusive_group()
     ip.add_argument("-4", "--ipv4-only", action="store_true",
                     help="Only set/update IPv4 A Records")
@@ -98,14 +94,14 @@ def main(argv=sys.argv[1:]):
             for handler in logger.handlers:
                 handler.setLevel(logging.DEBUG)
 
-        config = extract_config(args)
+        app = extract_config(args)
         ipv4 = args.ipv4_only
         ipv6 = args.ipv6_only
         if not any([ipv4, ipv6]):
             ipv4 = ipv6 = True
 
-        porkbun_ddns = PorkbunDDNS(config=config, domain=args.domain,
-                                   public_ips=args.public_ips, fritzbox_ip=args.fritzbox,
+        porkbun_ddns = PorkbunDDNS(app.credentials, app.retry, domain=args.domain,
+                                   public_ips=args.public_ips,
                                    ipv4=ipv4, ipv6=ipv6)
         if args.subdomains:
             for s in args.subdomains:
@@ -114,7 +110,7 @@ def main(argv=sys.argv[1:]):
         else:
             porkbun_ddns.update_records()
         if porkbun_ddns.changes:
-            fire_webhook(config, porkbun_ddns.changes, porkbun_ddns.domain)
+            fire_webhook(app.webhook, porkbun_ddns.changes, porkbun_ddns.domain)
             porkbun_ddns.changes = []
     except PorkbunDDNS_Error as e:
         logger.error("Error: " + str(e))

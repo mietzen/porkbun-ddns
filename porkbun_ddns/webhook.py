@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover - 3.10 fallback
 
 import jinja2
 
-from porkbun_ddns.config import Config
+from porkbun_ddns.config import WebhookConfig
 
 logger = logging.getLogger("porkbun_ddns")
 
@@ -76,11 +76,13 @@ def render_webhook_payload(changes: Sequence[dict[str, Any]],
             DEFAULT_WEBHOOK_TEMPLATE).render(**context)
 
 
-def send_webhook(url: str, payload: str) -> None:
+def send_webhook(url: str, payload: str,
+                 _urlopen: Any = urllib.request.urlopen) -> None:
     """POST the rendered payload to the webhook URL.
 
     Fire-and-forget: non-2xx responses, timeouts and connection errors are
-    logged as warnings and never raise.
+    logged as warnings and never raise. ``_urlopen`` is an internal seam for
+    tests.
     """
     try:
         request = urllib.request.Request(
@@ -89,7 +91,7 @@ def send_webhook(url: str, payload: str) -> None:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(request, timeout=10) as response:
+        with _urlopen(request, timeout=10) as response:
             if not 200 <= response.getcode() < 300:
                 logger.warning(
                     "Webhook returned non-2xx status code: %s",
@@ -98,9 +100,10 @@ def send_webhook(url: str, payload: str) -> None:
         logger.warning("Failed to send webhook to %s: %s", url, err)
 
 
-def fire_webhook(config: Config,
+def fire_webhook(config: WebhookConfig,
                  changes: Sequence[dict[str, Any]],
-                 domain: str) -> bool:
+                 domain: str,
+                 _urlopen: Any = urllib.request.urlopen) -> bool:
     """Render and send one aggregated webhook for the given changes.
 
     Sends nothing when no webhook URL is configured or no changes were
@@ -114,5 +117,5 @@ def fire_webhook(config: Config,
         template=config.webhook_template,
         template_file=config.webhook_template_file,
     )
-    send_webhook(config.webhook_url, payload)
+    send_webhook(config.webhook_url, payload, _urlopen)
     return True

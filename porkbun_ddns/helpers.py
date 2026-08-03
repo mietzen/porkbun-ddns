@@ -87,3 +87,17 @@ def get_ips_from_fritzbox(fritzbox_ip, ip_version=4):
         "</s:Envelope>"
     req.data = data.encode("utf8")
     return ET.fromstring(urllib.request.urlopen(req).read()).find(".//" + field).text
+
+
+def resolve_fritzbox_public_ips(fritzbox_ip: str, ipv4: bool, ipv6: bool) -> list[str]:
+    """Return the Fritzbox external IPs for the enabled address families.
+
+    Always returns a list; the caller combines it with other IP sources
+    rather than appending to a possibly-``None`` value.
+    """
+    ips: list[str] = []
+    if ipv4:
+        ips.append(get_ips_from_fritzbox(fritzbox_ip, ip_version=4))
+    if ipv6:
+        ips.append(get_ips_from_fritzbox(fritzbox_ip, ip_version=6))
+    return ips

@@ -13,12 +13,17 @@ porkbun-ddns is an unofficial DDNS client for Porkbun domains. Distributed as bo
 ```
 porkbun_ddns/            # Python package
 ├── __init__.py          # Package init, exports PorkbunDDNS class
-├── porkbun_ddns.py      # Core DDNS logic
+├── porkbun_ddns.py      # Core DDNS logic (orchestrator)
 ├── cli.py               # CLI entry point (porkbun-ddns command)
-├── config.py            # Configuration handling
+├── config.py            # Configuration handling (AppConfig, Credentials, RetryPolicy, WebhookConfig)
+├── api.py               # PorkbunAPIClient (HTTP API wrapper)
+├── reconcile.py         # Reconciliation logic (reconcile + Ensure intents)
+├── resolver.py          # PublicIPResolver (public IP discovery)
 ├── helpers.py           # Utility functions
 ├── webhook.py           # Jinja-templated webhook delivery
 ├── errors.py            # Custom exceptions
+├── scripts/             # Console-script entry points
+│   └── fritzbox_ips.py  # fritzbox-ips sidecar (obtains public IPs from Fritz!Box)
 └── test/                # pytest unit tests
 
 Docker/
@@ -104,10 +109,10 @@ Docker integration tests use cinc-auditor (inspec) and run automatically in CI. 
 
 - **Version:** Dynamic via `VERSION` env var in `setup.py` — never hardcoded
 - **Dependencies:** `xdg-base-dirs~=6.0.2` (pinned minor), `jinja2` (webhook templating)
-- **CLI entry point:** `porkbun-ddns` → `porkbun_ddns.cli:main`
+- **CLI entry points:** `porkbun-ddns` → `porkbun_ddns.cli:main`, `fritzbox-ips` → `porkbun_ddns.scripts.fritzbox_ips:main`
 - **Docker entry point:** `/entrypoint.py` — all config via environment variables:
   - Required: `DOMAIN`, `APIKEY`, `SECRETAPIKEY`
-  - Optional: `SUBDOMAINS`, `PUBLIC_IPS`, `FRITZBOX`, `IPV4`, `IPV6`, `SLEEP`, `DEBUG`, `LOG_LEVEL`, `RETRY_COUNT`, `RETRY_DELAY`, `WEBHOOK_URL`, `WEBHOOK_TEMPLATE`, `WEBHOOK_TEMPLATE_FILE`, `API_ENDPOINT`
+  - Optional: `SUBDOMAINS`, `PUBLIC_IPS`, `FRITZBOX` (queried directly by the entrypoint via `get_ips_from_fritzbox`; the `fritzbox-ips` sidecar remains for pip users), `IPV4`, `IPV6`, `SLEEP`, `DEBUG`, `LOG_LEVEL`, `RETRY_COUNT`, `RETRY_DELAY`, `WEBHOOK_URL`, `WEBHOOK_TEMPLATE`, `WEBHOOK_TEMPLATE_FILE`, `API_ENDPOINT`
 - **Multi-arch builds:** Platform list in `.github/platforms.json`, not hardcoded in workflows
 - **Secrets:** GitHub App token (APP_ID + APP_PRIVATE_KEY) for CI automation, Docker Hub credentials for image publishing, PyPI trusted publisher (no token needed)
 

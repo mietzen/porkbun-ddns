@@ -13,7 +13,13 @@ import urllib.request
 import pytest
 
 from porkbun_ddns import PorkbunDDNS
-from porkbun_ddns.config import DEFAULT_ENDPOINT, Config
+from porkbun_ddns.config import (
+    DEFAULT_ENDPOINT,
+    AppConfig,
+    Credentials,
+    RetryPolicy,
+    WebhookConfig,
+)
 from porkbun_ddns.test.mock_porkbun_api import PorkbunAPIMock
 
 SPEC_URL = "https://porkbun.com/api/json/v3/spec"
@@ -91,16 +97,18 @@ def test_mock_matches_spec():
             {"id": "1", "name": "example.com", "type": "A",
              "content": "203.0.113.5", "ttl": "600"},
         ]
-        config = Config(
-            endpoint=f"{mock.url}/api/json/v3",
-            apikey="test-apikey",
-            secretapikey="test-secret",
-            retry_count="3",
-            retry_delay="0",
+        config = AppConfig(
+            credentials=Credentials(
+                apikey="test-apikey",
+                secretapikey="test-secret",
+                endpoint=f"{mock.url}/api/json/v3",
+            ),
+            retry=RetryPolicy(),
+            webhook=WebhookConfig(),
         )
         # One update pass with a changed IP drives retrieve, delete and create.
         PorkbunDDNS(
-            config, "example.com", public_ips=["203.0.113.9"],
+            config.credentials, config.retry, "example.com", public_ips=["203.0.113.9"],
             ipv4=True, ipv6=False,
         ).update_records()
     finally:

@@ -1,24 +1,38 @@
-import json
 import logging
 import unittest
-from unittest.mock import MagicMock, patch
-from urllib.error import HTTPError, URLError
+from unittest.mock import MagicMock
+from urllib.error import HTTPError
 
 from porkbun_ddns import PorkbunDDNS
-from porkbun_ddns.config import Config
+from porkbun_ddns.api import PorkbunAPIClient
+from porkbun_ddns.config import AppConfig, Credentials, RetryPolicy, WebhookConfig
 from porkbun_ddns.errors import PorkbunDDNS_Error
+from porkbun_ddns.resolver import PublicIPResolver
+from porkbun_ddns.test.mock_porkbun_api import PorkbunAPIMock
+from porkbun_ddns.test.stubs import StubPorkbunAPIClient
 
 logger = logging.getLogger("porkbun_ddns")
 logger.setLevel(logging.INFO)
 
-valid_config = Config(
-    endpoint="https://api.porkbun.com/api/json/v3",
-    apikey="pk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    secretapikey="sk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+valid_config = AppConfig(
+    credentials=Credentials(
+        apikey="pk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        secretapikey="sk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        endpoint="https://api.porkbun.com/api/json/v3",
+    ),
+    retry=RetryPolicy(),
+    webhook=WebhookConfig(),
 )
 
 domain = "my-domain.local"
 ips = ["127.0.0.1", "::1"]
+
+
+def fake_urlopen_500(*_args, **_kwargs):
+    """A _urlopen seam that always responds with HTTP 500."""
+    response = MagicMock()
+    response.getcode.return_value = 500
+    return response
 
 
 def mock_api(status="SUCCESS", mock_records=None):
@@ -44,22 +58,21 @@ def mock_api(status="SUCCESS", mock_records=None):
 class TestPorkbunDDNS(unittest.TestCase):
     maxDiff = None
 
-    @patch.object(PorkbunDDNS,
-                  "_api",
-                  return_value=mock_api(
-                      status="SUCCESS",
-                      mock_records=[
-                          {
-                              "name": "my-domain.local",
-                              "type": "A",
-                              "content": "127.0.0.1"},
-                          {
-                              "name": "my-domain.local",
-                              "type": "AAAA",
-                              "content": "0000:0000:0000:0000:0000:0000:0000:0001"},
-                      ]))
-    def test_record_exists_and_up_to_date(self, mocker=None):
-        porkbun_ddns = PorkbunDDNS(valid_config, domain, ips)
+    def test_record_exists_and_up_to_date(self):
+        fake = StubPorkbunAPIClient(records=mock_api(
+            status="SUCCESS",
+            mock_records=[
+                {
+                    "name": "my-domain.local",
+                    "type": "A",
+                    "content": "127.0.0.1"},
+                {
+                    "name": "my-domain.local",
+                    "type": "AAAA",
+                    "content": "0000:0000:0000:0000:0000:0000:0000:0001"},
+            ])["records"])
+        porkbun_ddns = PorkbunDDNS(valid_config.credentials, valid_config.retry, domain, ips,
+                                   client=fake)
         with self.assertLogs("porkbun_ddns", level="INFO") as cm:
             porkbun_ddns.set_subdomain("@")
             porkbun_ddns.update_records()
@@ -67,22 +80,21 @@ class TestPorkbunDDNS(unittest.TestCase):
                              ["INFO:porkbun_ddns:A-Record of my-domain.local is up to date!",
                               "INFO:porkbun_ddns:AAAA-Record of my-domain.local is up to date!"])
 
-    @patch.object(PorkbunDDNS,
-                  "_api",
-                  return_value=mock_api(
-                      status="SUCCESS",
-                      mock_records=[
-                          {
-                              "name": "my-domain.local",
-                              "type": "A",
-                              "content": "127.0.0.2"},
-                          {
-                              "name": "my-domain.local",
-                              "type": "AAAA",
-                              "content": "0000:0000:0000:0000:0000:0000:0000:0002"},
-                      ]))
-    def test_record_exists_and_out_dated(self, mocker=None):
-        porkbun_ddns = PorkbunDDNS(valid_config, domain, ips)
+    def test_record_exists_and_out_dated(self):
+        fake = StubPorkbunAPIClient(records=mock_api(
+            status="SUCCESS",
+            mock_records=[
+                {
+                    "name": "my-domain.local",
+                    "type": "A",
+                    "content": "127.0.0.2"},
+                {
+                    "name": "my-domain.local",
+                    "type": "AAAA",
+                    "content": "0000:0000:0000:0000:0000:0000:0000:0002"},
+            ])["records"])
+        porkbun_ddns = PorkbunDDNS(valid_config.credentials, valid_config.retry, domain, ips,
+                                   client=fake)
         with self.assertLogs("porkbun_ddns", level="INFO") as cm:
             porkbun_ddns.set_subdomain("@")
             porkbun_ddns.update_records()
@@ -96,11 +108,10 @@ class TestPorkbunDDNS(unittest.TestCase):
                               ("INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
                               "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS")])
 
-    @patch.object(PorkbunDDNS,
-                  "_api",
-                  return_value=mock_api())
-    def test_record_do_not_exists(self, mocker=None):
-        porkbun_ddns = PorkbunDDNS(valid_config, domain, ips)
+    def test_record_do_not_exists(self):
+        fake = StubPorkbunAPIClient(records=mock_api()["records"])
+        porkbun_ddns = PorkbunDDNS(valid_config.credentials, valid_config.retry, domain, ips,
+                                   client=fake)
         with self.assertLogs("porkbun_ddns", level="INFO") as cm:
             porkbun_ddns.set_subdomain("@")
             porkbun_ddns.update_records()
@@ -110,23 +121,22 @@ class TestPorkbunDDNS(unittest.TestCase):
                               ("INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
                               "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS")])
 
-    @patch.object(PorkbunDDNS,
-                  "_api",
-                  return_value=mock_api(
-                      status="SUCCESS",
-                      mock_records=[
-                          {
-                              "name": "my-domain.local",
-                              "type": "ALIAS",
-                              "content": "my-domain.lan",
-                          },
-                          {
-                              "name": "my-domain.local",
-                              "type": "CNAME",
-                              "content": "my-domain.lan"},
-                      ]))
-    def test_record_overwrite_alias_and_cname(self, mocker=None):
-        porkbun_ddns = PorkbunDDNS(valid_config, domain, ips)
+    def test_record_overwrite_alias_and_cname(self):
+        fake = StubPorkbunAPIClient(records=mock_api(
+            status="SUCCESS",
+            mock_records=[
+                {
+                    "name": "my-domain.local",
+                    "type": "ALIAS",
+                    "content": "my-domain.lan",
+                },
+                {
+                    "name": "my-domain.local",
+                    "type": "CNAME",
+                    "content": "my-domain.lan"},
+            ])["records"])
+        porkbun_ddns = PorkbunDDNS(valid_config.credentials, valid_config.retry, domain, ips,
+                                   client=fake)
         with self.assertLogs("porkbun_ddns", level="INFO") as cm:
             porkbun_ddns.set_subdomain("@")
             porkbun_ddns.update_records()
@@ -139,43 +149,27 @@ class TestPorkbunDDNS(unittest.TestCase):
                               "my-domain.lan, Status: SUCCESS"),
                               ("INFO:porkbun_ddns:Creating A-Record for my-domain.local with content: "
                               "127.0.0.1, Status: SUCCESS"),
-                              ("INFO:porkbun_ddns:Deleting ALIAS-Record for my-domain.local with content: "
-                              "my-domain.lan, Status: SUCCESS"),
-                              ("INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
-                              "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS"),
-                              ("INFO:porkbun_ddns:Deleting CNAME-Record for my-domain.local with content: "
-                              "my-domain.lan, Status: SUCCESS"),
                               ("INFO:porkbun_ddns:Creating AAAA-Record for my-domain.local with content: "
                               "0000:0000:0000:0000:0000:0000:0000:0001, Status: SUCCESS")])
 
-    @patch("urllib.request.urlopen")
-    def test_urlopen_returns_500_ipv4(self, mock_urlopen):
-        # Set up the mock to return a response with status code 500
-        mock_response = MagicMock()
-        mock_response.getcode.return_value = 500
-        mock_urlopen.return_value = mock_response
+    def test_urlopen_returns_500_ipv4(self):
+        resolver = PublicIPResolver(ipv4=True, ipv6=False, _urlopen=fake_urlopen_500)
+        porkbun_ddns = PorkbunDDNS(valid_config.credentials, valid_config.retry,
+                                   domain="example.com", ipv4=True, ipv6=False,
+                                   resolver=resolver)
 
-        # Instantiate your class or call the method that uses urllib.request.urlopen()
-        porkbun_ddns = PorkbunDDNS(valid_config, domain="example.com", ipv4=True, ipv6=False)
-
-        # Now when you call the method that uses urllib.request.urlopen(), it will get the mocked response
         with self.assertRaises(PorkbunDDNS_Error) as context:
             porkbun_ddns.get_public_ips()
 
         # Verify that the exception has the expected error message
         self.assertEqual(str(context.exception), "Failed to obtain IP Addresses!")
 
-    @patch("urllib.request.urlopen")
-    def test_urlopen_returns_500_ipv6(self, mock_urlopen):
-        # Set up the mock to return a response with status code 500
-        mock_response = MagicMock()
-        mock_response.getcode.return_value = 500
-        mock_urlopen.return_value = mock_response
+    def test_urlopen_returns_500_ipv6(self):
+        resolver = PublicIPResolver(ipv4=False, ipv6=True, _urlopen=fake_urlopen_500)
+        porkbun_ddns = PorkbunDDNS(valid_config.credentials, valid_config.retry,
+                                   domain="example.com", ipv4=False, ipv6=True,
+                                   resolver=resolver)
 
-        # Instantiate your class or call the method that uses urllib.request.urlopen()
-        porkbun_ddns = PorkbunDDNS(valid_config, domain="example.com", ipv4=False, ipv6=True)
-
-        # Now when you call the method that uses urllib.request.urlopen(), it will get the mocked response
         with self.assertRaises(PorkbunDDNS_Error) as context:
             porkbun_ddns.get_public_ips()
 
@@ -183,134 +177,108 @@ class TestPorkbunDDNS(unittest.TestCase):
         self.assertEqual(str(context.exception), "Failed to obtain IP Addresses!")
 
 
-    @patch("time.sleep")
-    @patch("urllib.request.urlopen")
-    def test_api_network_unreachable(self, mock_urlopen, mock_sleep):
-        mock_urlopen.side_effect = URLError(OSError(101, "Network is unreachable"))
-
-        porkbun_ddns = PorkbunDDNS(valid_config, domain, ips)
+    def test_api_network_unreachable(self):
+        unreachable = PorkbunAPIClient(
+            Credentials(apikey="test-apikey", secretapikey="test-secret",
+                        endpoint="http://127.0.0.1:1/api/json/v3"),
+            RetryPolicy(retry_count=1, retry_delay=0),
+        )
+        porkbun_ddns = PorkbunDDNS(valid_config.credentials, valid_config.retry,
+                                   domain, ips, client=unreachable)
 
         with self.assertRaises(PorkbunDDNS_Error) as context:
             porkbun_ddns.get_records()
 
         self.assertIn(
-            "Error reaching https://api.porkbun.com/api/json/v3/dns/retrieve/my-domain.local! -",
+            "Error reaching http://127.0.0.1:1/api/json/v3/dns/retrieve/my-domain.local! -",
             str(context.exception),
         )
-        self.assertIn("Network is unreachable", str(context.exception))
+        self.assertIn("Connection refused", str(context.exception))
 
 
 class TestApiRetry(unittest.TestCase):
 
     def setUp(self):
-        self.porkbun_ddns = PorkbunDDNS(valid_config, domain, ips)
-        self.url = valid_config.endpoint + "/dns/retrieve/" + domain
+        self.mock = PorkbunAPIMock(apikey="test-apikey", secretapikey="test-secret")
+        self.mock.start()
+        self.credentials = Credentials(
+            apikey="test-apikey",
+            secretapikey="test-secret",
+            endpoint=f"{self.mock.url}/api/json/v3",
+        )
+        self.retry = RetryPolicy(retry_count=3, retry_delay=0)
+        self.client = PorkbunAPIClient(self.credentials, self.retry)
 
-    @staticmethod
-    def _success_response():
-        mock_response = MagicMock()
-        mock_response.read.return_value = json.dumps({"status": "SUCCESS"}).encode("utf-8")
-        return mock_response
+    def tearDown(self):
+        self.mock.stop()
 
-    @patch("time.sleep")
-    @patch("urllib.request.urlopen")
-    def test_success_on_first_attempt(self, mock_urlopen, mock_sleep):
-        mock_urlopen.return_value = self._success_response()
+    def test_success_on_first_attempt(self):
+        result = self.client.retrieve_records(domain)
 
-        result = self.porkbun_ddns._api("/dns/retrieve/" + domain)
+        self.assertEqual(result, [])
+        self.assertEqual(self.mock.request_count, 1)
 
-        self.assertEqual(result, {"status": "SUCCESS"})
-        self.assertEqual(mock_urlopen.call_count, 1)
-        mock_sleep.assert_not_called()
-
-    @patch("time.sleep")
-    @patch("urllib.request.urlopen")
-    def test_success_after_retries(self, mock_urlopen, mock_sleep):
-        mock_urlopen.side_effect = [
-            URLError(OSError(101, "Network is unreachable")),
-            URLError(OSError(101, "Network is unreachable")),
-            self._success_response(),
-        ]
+    def test_success_after_retries(self):
+        self.mock.fail_next = 2
 
         with self.assertLogs("porkbun_ddns", level="WARNING") as cm:
-            result = self.porkbun_ddns._api("/dns/retrieve/" + domain)
+            result = self.client.retrieve_records(domain)
 
-        self.assertEqual(result, {"status": "SUCCESS"})
-        self.assertEqual(mock_urlopen.call_count, 3)
-        self.assertEqual(mock_sleep.call_count, 2)
+        self.assertEqual(result, [])
+        self.assertEqual(self.mock.request_count, 3)
         self.assertEqual(len(cm.output), 2)
         self.assertTrue(all("Retrying in" in msg for msg in cm.output))
 
-    @patch("time.sleep")
-    @patch("urllib.request.urlopen")
-    def test_failure_after_all_retries(self, mock_urlopen, mock_sleep):
-        mock_urlopen.side_effect = [
-            URLError(OSError(101, "Network is unreachable")),
-            URLError(OSError(101, "Network is unreachable")),
-            URLError(OSError(101, "Network is unreachable")),
-        ]
+    def test_failure_after_all_retries(self):
+        self.mock.fail_next = 3
 
         with self.assertRaises(PorkbunDDNS_Error) as context:
-            self.porkbun_ddns._api("/dns/retrieve/" + domain)
+            self.client.retrieve_records(domain)
 
-        self.assertIn("Error reaching " + self.url + "!", str(context.exception))
-        self.assertIn("Network is unreachable", str(context.exception))
-        self.assertEqual(mock_urlopen.call_count, 3)
-        self.assertEqual(mock_sleep.call_count, 2)
+        self.assertIn("Error reaching", str(context.exception))
+        self.assertIn("HTTP 500", str(context.exception))
+        self.assertEqual(self.mock.request_count, 3)
 
-    @patch("time.sleep")
-    @patch("urllib.request.urlopen")
-    def test_http_400_raises_without_retry(self, mock_urlopen, mock_sleep):
-        mock_urlopen.side_effect = HTTPError(self.url, 400, "Bad Request", None, None)
+    def test_http_400_raises_without_retry(self):
+        bad_client = PorkbunAPIClient(
+            Credentials(apikey="wrong", secretapikey="test-secret",
+                        endpoint=self.credentials.endpoint),
+            self.retry,
+        )
 
         with self.assertRaises(PorkbunDDNS_Error) as context:
-            self.porkbun_ddns._api("/dns/retrieve/" + domain)
+            bad_client.retrieve_records(domain)
 
         self.assertEqual(str(context.exception), "Invalid API Keys!")
-        self.assertEqual(mock_urlopen.call_count, 1)
-        mock_sleep.assert_not_called()
+        self.assertEqual(self.mock.request_count, 1)
 
-    @patch("time.sleep")
-    @patch("urllib.request.urlopen")
-    def test_http_500_retries_then_raises(self, mock_urlopen, mock_sleep):
-        mock_urlopen.side_effect = [
-            HTTPError(self.url, 500, "Internal Server Error", None, None),
-            HTTPError(self.url, 500, "Internal Server Error", None, None),
-            HTTPError(self.url, 500, "Internal Server Error", None, None),
-        ]
+    def test_http_500_retries_then_raises(self):
+        self.mock.fail_next = 3
 
         with self.assertRaises(PorkbunDDNS_Error) as context:
-            self.porkbun_ddns._api("/dns/retrieve/" + domain)
+            self.client.retrieve_records(domain)
 
         self.assertIn("HTTP 500", str(context.exception))
-        self.assertEqual(mock_urlopen.call_count, 3)
-        self.assertEqual(mock_sleep.call_count, 2)
+        self.assertEqual(self.mock.request_count, 3)
 
-    @patch("time.sleep")
-    @patch("urllib.request.urlopen")
-    def test_http_404_raises_without_retry(self, mock_urlopen, mock_sleep):
-        mock_urlopen.side_effect = HTTPError(self.url, 404, "Not Found", None, None)
-
+    def test_http_404_raises_without_retry(self):
         with self.assertRaises(HTTPError):
-            self.porkbun_ddns._api("/dns/retrieve/" + domain)
+            self.client._post(
+                "/dns/retrieve/" + domain + "/extra",
+                {"apikey": "test-apikey", "secretapikey": "test-secret"},
+            )
 
-        self.assertEqual(mock_urlopen.call_count, 1)
-        mock_sleep.assert_not_called()
+        self.assertEqual(self.mock.request_count, 1)
 
-    @patch("time.sleep")
-    @patch("urllib.request.urlopen")
-    def test_retry_fields_not_sent_in_request_body(self, mock_urlopen, mock_sleep):
-        mock_urlopen.return_value = self._success_response()
+    def test_retry_fields_not_sent_in_request_body(self):
+        self.client.retrieve_records(domain)
 
-        self.porkbun_ddns._api("/dns/retrieve/" + domain)
-
-        request = mock_urlopen.call_args[0][0]
-        body = json.loads(request.data.decode("utf-8"))
+        body = self.mock.request_bodies[0]
         self.assertNotIn("retry_count", body)
         self.assertNotIn("retry_delay", body)
-        self.assertEqual(body["endpoint"], valid_config.endpoint)
-        self.assertEqual(body["apikey"], valid_config.apikey)
-        self.assertEqual(body["secretapikey"], valid_config.secretapikey)
+        self.assertEqual(body["endpoint"], self.credentials.endpoint)
+        self.assertEqual(body["apikey"], self.credentials.apikey)
+        self.assertEqual(body["secretapikey"], self.credentials.secretapikey)
 
 
 if __name__ == "__main__":
