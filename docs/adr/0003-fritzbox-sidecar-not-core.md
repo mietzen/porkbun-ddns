@@ -9,7 +9,7 @@ Fritzbox UPnP IP discovery was a core concern of `PorkbunDDNS.get_public_ips`, u
 
 ## Decision
 
-Extract fritzbox IP discovery to a sidecar console-script (`fritzbox-ips`) invoked by `Docker/entrypoint.py` to preserve the `FRITZBOX` env. Drop `fritzbox_ip` from the `PorkbunDDNS` constructor. Drop the fritzbox branch from `PublicIPResolver` (now two sources: static + public-HTTP).
+Extract fritzbox IP discovery to a sidecar console-script (`fritzbox-ips`) for pip users; the Docker entrypoint preserves the `FRITZBOX` env by calling `get_ips_from_fritzbox` directly. Drop `fritzbox_ip` from the `PorkbunDDNS` constructor. Drop the fritzbox branch from `PublicIPResolver` (now two sources: static + public-HTTP).
 
 ## Considered Options
 
@@ -21,4 +21,4 @@ Extract fritzbox IP discovery to a sidecar console-script (`fritzbox-ips`) invok
 - Pip users migrate `--fritzbox <ip>` to the `fritzbox-ips <ip>` console-script, piped into `--public-ips`.
 - `PublicIPResolver` becomes two-source only.
 - `PorkbunDDNS` constructor shrinks.
-- `helpers.get_ips_from_fritzbox` stays in the package (called by the sidecar), not from core.
+- `helpers.get_ips_from_fritzbox` stays in the package (called by the sidecar and the Docker entrypoint), not from core.

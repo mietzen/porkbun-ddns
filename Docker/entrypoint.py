@@ -1,5 +1,4 @@
 import os
-import subprocess
 import sys
 import logging
 from time import sleep
@@ -12,7 +11,7 @@ from porkbun_ddns.config import (
     WebhookConfig,
 )
 from porkbun_ddns.errors import PorkbunDDNS_Error
-from porkbun_ddns.helpers import parse_log_level
+from porkbun_ddns.helpers import get_ips_from_fritzbox, parse_log_level
 from porkbun_ddns.webhook import fire_webhook
 
 logger = logging.getLogger('porkbun_ddns')
@@ -46,13 +45,11 @@ if os.getenv('IPV6', 'False').lower() in ('true', '1', 't'):
     ipv6 = True
 
 if not public_ips and os.getenv('FRITZBOX', None):
-    args = ['fritzbox-ips', os.getenv('FRITZBOX')]
-    if ipv4 and not ipv6:
-        args.append('--v4')
-    elif ipv6 and not ipv4:
-        args.append('--v6')
-    out = subprocess.run(args, capture_output=True, text=True, check=True)
-    public_ips = [ip for ip in out.stdout.split() if ip]
+    fritzbox_ip = os.getenv('FRITZBOX')
+    if ipv4:
+        public_ips = [get_ips_from_fritzbox(fritzbox_ip, ip_version=4)]
+    if ipv6:
+        public_ips.append(get_ips_from_fritzbox(fritzbox_ip, ip_version=6))
 
 app = AppConfig(
     credentials=Credentials(
