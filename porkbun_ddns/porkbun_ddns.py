@@ -2,15 +2,11 @@ from __future__ import annotations
 
 import json
 import logging
-import urllib.request
-from ipaddress import ip_address
-from urllib.error import URLError
 
 from porkbun_ddns.api import PorkbunAPIClient
 from porkbun_ddns.config import Credentials, RetryPolicy
-from porkbun_ddns.errors import PorkbunDDNS_Error
-from porkbun_ddns.helpers import get_ips_from_fritzbox
 from porkbun_ddns.reconcile import Ensure, reconcile
+from porkbun_ddns.resolver import PublicIPResolver
 
 logger = logging.getLogger("porkbun_ddns")
 
@@ -25,10 +21,10 @@ class PorkbunDDNS:
             retry: RetryPolicy,
             domain: str,
             public_ips: list | None = None,
-            fritzbox_ip: str | None = None,
             ipv4: bool = True,
             ipv6: bool = True,
             client: PorkbunAPIClient | None = None,
+            resolver: PublicIPResolver | None = None,
     ) -> None:
 
         self.credentials = credentials
@@ -36,9 +32,9 @@ class PorkbunDDNS:
         self.static_ips = public_ips
         self.domain = domain.lower()
         self.records = None
-        self.fritzbox_ip = fritzbox_ip
         self.ipv4 = ipv4
         self.ipv6 = ipv6
+        self.resolver = resolver or PublicIPResolver(ipv4=ipv4, ipv6=ipv6)
         self.fqdn = self.domain
         self.subdomain = "@"
         self.changes: list = []
@@ -53,58 +49,7 @@ class PorkbunDDNS:
     def get_public_ips(self) -> list:
         """Retrieve the public IP addresses of the network.
         """
-        public_ips: set | list | None
-        if self.static_ips:
-            public_ips = self.static_ips
-        else:
-            public_ips = []
-            if self.fritzbox_ip:
-                if self.ipv4:
-                    public_ips.append(
-                        get_ips_from_fritzbox(self.fritzbox_ip, ip_version=4))
-                if self.ipv6:
-                    public_ips.append(
-                        get_ips_from_fritzbox(self.fritzbox_ip, ip_version=6))
-            else:
-                if self.ipv4:
-                    urls = ["https://v4.ident.me",
-                            "https://api.ipify.org",
-                            "https://ipv4.icanhazip.com"]
-                    for url in urls:
-                        try:
-                            with urllib.request.urlopen(url, timeout=30) as response:
-                                if response.getcode() == 200:
-                                    public_ips.append(
-                                        response.read().decode("utf-8").strip())
-                                    break
-                                logger.warning(
-                                    "Failed to retrieve IPv4 Address from %s! HTTP status code: %s", url, str(response.code()))
-                        except URLError as err:
-                            logger.warning(
-                                "Error reaching %s! - %s", url, err.reason)
-                if self.ipv6:
-                    urls = ["https://v6.ident.me",
-                            "https://api6.ipify.org",
-                            "https://ipv6.icanhazip.com"]
-                    for url in urls:
-                        try:
-                            with urllib.request.urlopen(url, timeout=30) as response:
-                                if response.getcode() == 200:
-                                    public_ips.append(
-                                        response.read().decode("utf-8").strip())
-                                    break
-                                logger.warning(
-                                    "Failed to retrieve IPv6 Address from %s! HTTP status code: %s", url, str(response.code()))
-                        except URLError as err:
-                            logger.warning(
-                                "Error reaching %s! - %s", url, err.reason)
-
-            public_ips = set(public_ips)
-
-        if not public_ips:
-            raise PorkbunDDNS_Error("Failed to obtain IP Addresses!")
-
-        return [ip_address(x) for x in public_ips if not ip_address(x).is_unspecified]
+        return self.resolver.resolve(self.static_ips)
 
     def get_records(self) -> list:
         """Retrieve the DNS records for the specified domain.
