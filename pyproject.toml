@@ -20,6 +20,7 @@ repository = "https://github.com/mietzen/porkbun-ddns"
 
 [project.scripts]
 porkbun-ddns = "porkbun_ddns.cli:main"
+fritzbox-ips = "porkbun_ddns.scripts.fritzbox_ips:main"
 
 [project.optional-dependencies]
 test = ["jsonschema"]
@@ -29,4 +30,4 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["porkbun_ddns"]
+packages = ["porkbun_ddns", "porkbun_ddns.scripts"]
