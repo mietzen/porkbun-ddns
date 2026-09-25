@@ -12,7 +12,7 @@ jobs:
   auto-release:
     if: github.event.pull_request.merged == true && github.event.pull_request.user.login == 'dependabot[bot]' && contains(github.event.pull_request.labels.*.name, 'python')
     name: "Auto Release"
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-26.04"
     steps:
       - id: get-version
         run: |

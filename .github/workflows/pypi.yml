@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   Setup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       version: ${{ steps.set-version.outputs.version }}
     steps:
@@ -31,7 +31,7 @@ jobs:
         echo "version=$(echo ${VERSION})" >> $GITHUB_OUTPUT
 
   Deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: Setup
     permissions:
         contents: read

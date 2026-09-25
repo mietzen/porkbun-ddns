@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   manage-feedback-label:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: ${{ !github.event.issue.pull_request }}
     steps:
       - name: Determine commenter role
