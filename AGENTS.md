@@ -48,10 +48,9 @@ Docker/
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `lint_and_test.yml` | PR to main | pytest across Python 3.10-3.14 + ruff linting |
-| `auto-merge-dependabot.yml` | Schedule (every 6h) + manual | Enables auto-merge via GitHub App token. 14-day cooldown for python PRs (requirements.txt / pyproject.toml / setup.py); docker and github-actions PRs auto-merge on next schedule tick |
+| `auto-merge-dependabot.yml` | PR opened (dependabot) + manual | Enables auto-merge via GitHub App token |
 | `auto-release.yml` | Merged dependabot python PR | Patch-bumps version and creates a new GitHub release |
-| `docker-rebuild.yml` | Merged dependabot docker PR / workflow_dispatch | Rebuild Docker images at current version (no new release) |
-| `docker.yml` | GitHub release published / PR | Build multi-arch Docker images, push to Docker Hub on release |
+| `docker.yml` | Release / merged dependabot docker PR / PR / dispatch | Build multi-arch Docker images, push on release, dispatch, or merged dependabot docker PR |
 | `pypi.yml` | GitHub release published | Build wheel, publish to PyPI (trusted publisher) |
 | `feedback-label.yml` | Issue comment | Manage "Feedback needed" label on issues |
 
@@ -60,21 +59,21 @@ Docker/
 Watches three ecosystems:
 - **docker** (`/Docker`): Python base image, patch updates only
 - **github-actions** (`/.github/workflows`): All action version updates
-- **pip** (`/`): Python dependency updates
+- **pip** (`/`): Python dependency updates (14-day cooldown configured in `dependabot.yml`)
 
 ### Release Process
 
 **Python dependabot bumps** (automated):
-1. Dependabot opens PR for Python dependency update
+1. Dependabot opens PR for Python dependency update (after 14-day cooldown)
 2. `lint_and_test.yml` runs PR checks
-3. `auto-merge-dependabot.yml` waits for the PR to be at least 14 days old, then enables auto-merge (supply-chain defense)
+3. `auto-merge-dependabot.yml` enables auto-merge
 4. On merge, `auto-release.yml` patch-bumps the version (e.g. `v1.1.27` → `v1.1.28`) and creates a GitHub release
 5. `pypi.yml` publishes the new wheel to PyPI, `docker.yml` builds multi-arch Docker images with the new version tags
 
 **Docker dependabot bumps** (automated):
 1. Dependabot opens PR for Docker base image update
-2. `auto-merge-dependabot.yml` enables auto-merge on the next schedule tick
-3. On merge, `docker-rebuild.yml` rebuilds Docker images at current version
+2. `auto-merge-dependabot.yml` enables auto-merge
+3. On merge, `docker.yml` rebuilds Docker images at current version
 4. Overwrites existing version tags and `latest` — no new release, no PyPI publish
 
 **New feature/bugfix release** (manual):
