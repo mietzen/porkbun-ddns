@@ -1,10 +1,10 @@
-name: Auto-merge Dependabot
-
+name: Auto Merge Dependabot
 on:
-  pull_request_target:
+  pull_request:
     types:
       - opened
-  workflow_dispatch:
+    branches:
+      - "main"
 
 permissions:
   pull-requests: write
@@ -12,23 +12,21 @@ permissions:
 
 jobs:
   auto-merge:
-    if: github.event_name == 'workflow_dispatch' || github.actor == 'dependabot[bot]'
+    name: "Auto Merge Dependabot PR"
     runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
     steps:
+      - uses: actions/checkout@v7
       - uses: actions/create-github-app-token@v3
-        id: token
+        id: generate-token
         with:
           client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
-      - name: Enable auto-merge
+      - name: Enable Pull Request Automerge
+        run: gh pr merge --squash --auto "${{ github.event.pull_request.number }}"
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request_target" ]; then
-            gh pr merge "${{ github.event.pull_request.html_url }}" --auto --squash
-          else
-            for pr in $(gh pr list --repo "$GITHUB_REPOSITORY" --author app/dependabot --state open --json number -q '.[].number'); do
-              gh pr merge "$pr" --auto --squash --repo "$GITHUB_REPOSITORY"
-            done
-          fi
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+      - name: Auto approve
+        run: gh pr review --approve "${{ github.event.pull_request.number }}"
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
