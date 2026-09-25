@@ -1,6 +1,4 @@
 {"platforms":[
   {"platform": "linux/amd64", "runner": "ubuntu-26.04"},
-  {"platform": "linux/arm64", "runner": "ubuntu-26.04-arm"},
-  {"platform": "linux/arm/v7", "runner": "ubuntu-26.04"},
-  {"platform": "linux/arm/v6", "runner": "ubuntu-26.04"}
+  {"platform": "linux/arm64", "runner": "ubuntu-26.04-arm"}
 ]}
