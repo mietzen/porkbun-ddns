@@ -26,7 +26,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && github.event.action != 'closed') ||
       (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && github.event.pull_request.user.login == 'dependabot[bot]' && contains(github.event.pull_request.labels.*.name, 'docker'))
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       version: ${{ steps.set-matrix.outputs.version }}
       should_push: ${{ steps.set-matrix.outputs.should_push }}
@@ -165,7 +165,7 @@ jobs:
 
   Shared-Manifest:
     if: needs.Setup.outputs.should_push == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs:
       - Build
       - Setup
@@ -211,7 +211,7 @@ jobs:
 
   Check-Build:
     if: ${{ always() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs:
       - Build
       - Shared-Manifest
