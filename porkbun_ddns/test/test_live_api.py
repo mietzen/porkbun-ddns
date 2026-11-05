@@ -27,7 +27,7 @@ SPEC_URL = "https://porkbun.com/api/json/v3/spec"
 DNS_ENDPOINTS = (
     "/dns/retrieve/{domain}",
     "/dns/create/{domain}",
-    "/dns/delete/{domain}/{id}",
+    "/dns/delete/{domain}/{str(id)}",
 )
 
 
