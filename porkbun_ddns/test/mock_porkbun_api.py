@@ -108,7 +108,7 @@ class PorkbunAPIMock:
         elif action == "create" and domain is not None and record_id is None:
             record = self._create_record(domain, body)
             self._respond(handler, 200,
-                          {"status": "SUCCESS", "id": record["id"]})
+                          {"status": "SUCCESS", "id": int(record["id"])})
         elif action == "delete" and domain is not None and record_id is not None:
             self._delete_record(domain, record_id)
             self._respond(handler, 200, {"status": "SUCCESS"})
