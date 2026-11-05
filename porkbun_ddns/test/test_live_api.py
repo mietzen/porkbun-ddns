@@ -94,7 +94,7 @@ def test_mock_matches_spec():
     mock.start()
     try:
         mock.records["example.com"] = [
-            {"id": "1", "name": "example.com", "type": "A",
+            {"id": 1, "name": "example.com", "type": "A",
              "content": "203.0.113.5", "ttl": "600"},
         ]
         config = AppConfig(
